@@ -1,4 +1,5 @@
 import express from 'express'
+
 import userRoutes from './routes/user.routes.js'
 import userMovies from './routes/movies.routes.js'
 
