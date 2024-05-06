@@ -91,5 +91,5 @@ export const clasifiedMovie = async (req, res) => {
     }
     // Guardar en la base de datos
 
-    res.status(200).json({ message: `Pelicula: ${movieId}  / Usuario: ${userId}  / Rating: ${rating}` });
+    res.status(201).json({ message: `Pelicula: ${movieId}  / Usuario: ${userId}  / Rating: ${rating}` });
 }

@@ -66,3 +66,16 @@ export const deleteUser = async (req, res) => {
     }
     res.send('Usuario eliminado')
 }
+
+
+export const getFavorites = async (req, res) => {
+
+}
+
+export const postFavorite = async (req, res) => {
+
+}
+
+export const deleteFavorite = async (req, res) => {
+
+}
