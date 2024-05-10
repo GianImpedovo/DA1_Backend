@@ -1,71 +1,88 @@
-import { getConnection } from "../db/connection.js"
+import { getConnection } from "../db/connection.js";
 import sql from 'mssql';
 
-
 export const getUsers = async (req, res) => {
-    const pool = await getConnection();
-    const result = await pool.request().query("SELECT * FROM Usuarios")
-    res.json(result.recordset);
-}
+    try {
+        const pool = await getConnection();
+        const result = await pool.request().query("SELECT * FROM usuarios");
+        res.json(result.recordset);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener usuarios.' });
+    }
+};
 
 export const getUser = async (req, res) => {
-    const pool = await getConnection();
-    const result = await pool.request()
-    .input('id', sql.Int, req.params.id)
-    .query("SELECT * FROM Usuarios where UserId = @id")
-    console.log(result)
-    if( result.rowsAffected[0] === 0 ){
-        return res.status(404).json({message : 'Usuario no encontrado.'})
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('id', sql.Int, req.params.id)
+            .query("SELECT * FROM usuarios WHERE user_id = @id");
+        if (!result.recordset.length) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+        res.json(result.recordset[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener usuario.' });
     }
-    return res.json(result.recordset[0])
-}
+};
 
 export const postUser = async (req, res) => {
-    const pool = await getConnection();
-    const result = await pool.request()
-    .input('Name', sql.VarChar, req.body.Name)
-    .input('Nickname', sql.VarChar, req.body.Nickname)
-    .input('Email', sql.VarChar, req.body.Email)
-    .query("INSERT INTO Usuarios(Nombre, Nickname, Email) values (@Name, @Nickname, @Email); select scope_identity() as id;");
-
-    console.log(result)
-    res.json({
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('Name', sql.NVarChar, req.body.Name)
+            .input('Nickname', sql.NVarChar, req.body.Nickname)
+            .input('Email', sql.NVarChar, req.body.Email)
+            .query("INSERT INTO usuarios (nombre, nickname, correo_electronico) VALUES (@Name, @Nickname, @Email); SELECT SCOPE_IDENTITY() AS id;");
+        res.json({
             id: result.recordset[0].id,
             name: req.body.Name,
             nickname: req.body.Nickname,
-            email: req.body.Email,
-        }
-    )
-}
+            email: req.body.Email
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al crear usuario.' });
+    }
+};
 
 export const putUser = async (req, res) => {
-    const pool = await getConnection();
-    const result = await pool.request()
-    .input('id', sql.Int, req.params.id)
-    .input('Name', sql.VarChar, req.body.Name)
-    .input('Nickname', sql.VarChar, req.body.Nickname)
-    .input('email', sql.VarChar, req.body.Email)
-    .query("UPDATE Usuarios SET Nombre = @Name, Nickname = @Nickname, Email = @email WHERE UserID = @id ");
-
-    if(result.rowsAffected[0] === 0){
-        return res.status(404).json({message : 'Usuario no encontrado.'})
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('id', sql.Int, req.params.id)
+            .input('Name', sql.NVarChar, req.body.Name)
+            .input('Nickname', sql.NVarChar, req.body.Nickname)
+            .input('Email', sql.NVarChar, req.body.Email)
+            .query("UPDATE usuarios SET nombre = @Name, nickname = @Nickname, correo_electronico = @Email WHERE user_id = @id");
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+        res.send("Usuario actualizado");
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al actualizar usuario.' });
     }
-
-    res.send("Usuario actualizado")
-
-}
+};
 
 export const deleteUser = async (req, res) => {
-    const pool = await getConnection();
-    const result = await pool.request()
-    .input('id', sql.Int, req.params.id)
-    .query("DELETE FROM Usuarios WHERE UserID = @id ");
-
-    if(result.rowsAffected[0] === 0){
-        return res.status(404).json({message : 'Usuario no encontrado.'})
+    try {
+        const pool = await getConnection();
+        const result = await pool.request()
+            .input('id', sql.Int, req.params.id)
+            .query("DELETE FROM usuarios WHERE user_id = @id");
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado.' });
+        }
+        res.send('Usuario eliminado');
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al eliminar usuario.' });
     }
-    res.send('Usuario eliminado')
-}
+};
+
 
 
 export const getFavorites = async (req, res) => {
