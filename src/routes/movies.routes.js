@@ -1,12 +1,16 @@
 import { Router } from "express";
-import { getMovies, getMovie, clasifiedMovie } from "../controllers/movies.controllers.js";
+import { getMovies, getMovie, clasifiedMovie, getGenre } from "../controllers/movies.controllers.js";
 
-const router = Router();
+const movieRouter = Router();
 
-router.get("/movies", getMovies)
+movieRouter.get("/movies/generos", getGenre) 
 
-router.get("/movies/:id", getMovie)
+movieRouter.get("/movies", getMovies)
 
-router.post("/movies/:movieId/:userId", clasifiedMovie)
+movieRouter.get("/movies/:id", getMovie)
 
-export default router
+movieRouter.post("/movies/:movieId/:userId", clasifiedMovie)
+
+
+
+export default movieRouter

@@ -82,7 +82,6 @@ export const getMovie = async (req, res) => {
 
 }
 
-
 export const clasifiedMovie = async (req, res) => {
     const { movieId, userId} = req.params;
     const { rating } = req.query;
@@ -93,3 +92,8 @@ export const clasifiedMovie = async (req, res) => {
 
     res.status(201).json({ message: `Pelicula: ${movieId}  / Usuario: ${userId}  / Rating: ${rating}` });
 }
+
+export const getGenre = async  (req, res) => {
+    console.log("Llamada a la ruta /movies/generos recibida."); 
+    res.status(200).json({ message: "Éxito" });
+}  
