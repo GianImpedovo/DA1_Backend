@@ -1,12 +1,10 @@
 import { Router } from "express";
 import { postLogin, putLogin, deleteLogin } from '../controllers/login.controllers.js'
+import { validateToken } from "../middleware/jwtMiddleware.js";
 
-const router = Router();
+const loginRouter = Router();
 
-router.post("/login", postLogin)
+loginRouter.post('/login', postLogin);
+loginRouter.put('/login', validateToken, putLogin)
 
-router.put("/login", putLogin)
-
-router.delete("/login", deleteLogin)
-
-export default router
+export default loginRouter

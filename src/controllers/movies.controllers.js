@@ -3,15 +3,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 
-// PARA VALIDACIONES PUEDO USAR 'ZOD'
-// PROBLEMA DE CORS SOLUCIONAR EN HEADER Y AGREGAR LA URL'S PERMITIDAS
-// 
+// PARA VALIDACIONES PUEDO USAR 'ZOD' 
 
 const accessToken = process.env.ACCESS_TOKEN;
 
 export const getMovies = async (req, res) => {
-    const lang = req.query.language;
-    const url = `https://api.themoviedb.org/3/movie/now_playing?language=${lang}&page=1`;
+    const { search, orderBy, genre, limit,language } = req.query;
+    const url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=1`;
     const headers = {
         'Accept': 'application/json',
         'Authorization': `Bearer ${accessToken}`
@@ -94,6 +92,17 @@ export const clasifiedMovie = async (req, res) => {
 }
 
 export const getGenre = async  (req, res) => {
-    console.log("Llamada a la ruta /movies/generos recibida."); 
-    res.status(200).json({ message: "Éxito" });
+    const { language } = req.query;
+    const url = `https://api.themoviedb.org/3/genre/movie/list?language=${language}`;
+    const headers = {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+    };
+
+    try {
+        const genres = await axios.get(url, { headers });
+        res.json(genres.data)
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 }  
