@@ -1,5 +1,8 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
+import { getConnection } from '../db/connection.js';
+import { existePelicula, guardarPelicula, existeRegistro } from './users.controllers.js';
+import sql from 'mssql';
 dotenv.config();
 
 const discover = 'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false'
@@ -120,15 +123,86 @@ export const getMovie = async (req, res) => {
 
 }
 
+const restarAntiguoRating = async (rating, movieId, pool) => {
+    try {
+        await pool.request()
+        .input('pelicula_id', sql.Int, movieId)
+        .input('rating', sql.Int, rating)
+        .query('UPDATE Pelicula SET suma_votos = suma_votos - @rating WHERE id = @pelicula_id;')
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+const sumarNuevoRating = async (rating, movieId, pool) => {
+    try {
+        await pool.request()
+        .input('pelicula_id', sql.Int, movieId)
+        .input('rating', sql.Int, rating)
+        .query('UPDATE Pelicula SET suma_votos = suma_votos + @rating WHERE id = @pelicula_id;')
+
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+const actualizarRegistroPelicula = async (rating, userId, movieId, pool) => {
+    try {
+        let ratingViejo = await pool.request()
+        .input('usuario_id', sql.Int, userId)
+        .input('pelicula_id', sql.Int, movieId)
+        .query('SELECT rating FROM Interaccion_pelicula WHERE usuario_id = @usuario_id AND pelicula_id = @pelicula_id;')
+        ratingViejo = ratingViejo.recordset[0].rating
+        await restarAntiguoRating(ratingViejo, movieId, pool)
+        await sumarNuevoRating(rating, movieId, pool)
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al buscar registro' });
+    }
+    
+}
+
 export const clasifiedMovie = async (req, res) => {
     const { movieId, userId} = req.params;
     const { rating } = req.query;
     if (!rating || isNaN(rating) || rating < 1 || rating > 5) {
         return res.status(400).json({ error: 'Calificación inválida' });
     }
-    // Guardar en la base de datos
 
-    res.status(201).json({ message: `Pelicula: ${movieId}  / Usuario: ${userId}  / Rating: ${rating}` });
+    try {
+        const pool = await getConnection();
+        let result;
+        const estaPelicula = await existePelicula( movieId, pool )
+        if(!estaPelicula){
+            await guardarPelicula(movieId, 1, rating, pool)
+        }
+        const estaRegistro = await existeRegistro( userId, movieId, pool)
+        if(estaRegistro){ // si esta el registro solo actualizo el campo del rating que pone el usuario
+            await actualizarRegistroPelicula(rating, userId, movieId, pool)
+            result = await pool.request()
+            .input('usuario_id', sql.Int, userId)
+            .input('pelicula_id', sql.Int, movieId)
+            .input('rating', sql.Int, rating)
+            .query("UPDATE Interaccion_pelicula SET rating = @rating WHERE usuario_id = @usuario_id AND pelicula_id = @pelicula_id; ");
+        } else { // Si no esta el registro creo uno nuevo con toda la info 
+            result = await pool.request()
+            .input('usuario_id', sql.Int, userId)
+            .input('pelicula_id', sql.Int, movieId)
+            .input('rating', sql.Int, rating)
+            .input('favorito', sql.Int, 0)
+            .query('INSERT INTO Interaccion_pelicula ( usuario_id, pelicula_id, rating, favorito) VALUES (@usuario_id, @pelicula_id, @rating, @favorito);'
+                +  'UPDATE Pelicula SET cantidad_votos = cantidad_votos + 1, suma_votos = suma_votos + @rating WHERE id = @pelicula_id;')
+        }
+
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ message: 'Dato no encontrado' });
+        }
+        res.send(`se clasifico la pelicula ${rating}`);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al insertar rating de pelicula' });
+    }
 }
 
 export const getGenre = async  (req, res) => {

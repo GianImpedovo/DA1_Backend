@@ -104,7 +104,7 @@ export const getFavorites = async (req, res) => {
     }
 }
 
-const guardarPelicula = async (movieId, cantidad_votos = 0, suma_votos = 0, pool) => {
+export const guardarPelicula = async (movieId, cantidad_votos = 0, suma_votos = 0, pool) => {
     const pelicula = await pool.request()
         .input('id', sql.Int, movieId)
         .input('cantidad_votos', sql.Int, cantidad_votos)
@@ -113,7 +113,7 @@ const guardarPelicula = async (movieId, cantidad_votos = 0, suma_votos = 0, pool
     // console.log(pelicula) -> Esto me trae peliculas.rowsAffected cuando ingreso la nuevo pelicula
 }
 
-const existePelicula = async ( movieId, pool ) => {
+export const existePelicula = async ( movieId, pool ) => {
     try {
         const pelicula = await pool.request()
         .input('id', sql.Int, movieId)
@@ -124,7 +124,7 @@ const existePelicula = async ( movieId, pool ) => {
     }
 }
 
-const existeRegistro = async (id, movieId, pool) => {
+export const existeRegistro = async (id, movieId, pool) => {
     // query : SELECT COUNT(*) AS count FROM interaccion_pelicula WHERE user_id = ? AND pelicula_id = ?
     const registro = await pool.request()
     .input('usuario_id', sql.Int, id)
@@ -158,6 +158,7 @@ export const putFavorite = async (req, res) => {
             .input('favorito', sql.Int, 1)
             .query('INSERT INTO Interaccion_pelicula ( usuario_id, pelicula_id, rating, favorito) VALUES (@id, @pelicula_id, @rating, @favorito);')
         }
+
         if (result.rowsAffected[0] === 0) {
             return res.status(404).json({ message: 'Dato no encontrado' });
         }
