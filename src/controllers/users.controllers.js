@@ -133,7 +133,7 @@ const existeRegistro = async (id, movieId, pool) => {
     return registro.recordset[0].count === 1
 }
 
-export const postFavorite = async (req, res) => {
+export const putFavorite = async (req, res) => {
     const { id, movieId } = req.params
     let result;
     try {
