@@ -2,6 +2,7 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 dotenv.config();
 
+const discover = 'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false'
 
 // PARA VALIDACIONES PUEDO USAR 'ZOD' 
 
@@ -9,7 +10,22 @@ const accessToken = process.env.ACCESS_TOKEN;
 
 export const getMovies = async (req, res) => {
     const { search, orderBy, genre, limit,language } = req.query;
-    const url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=1`;
+    const page = 1;
+    let url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=${page}`;
+    if(search){
+        console.log("buscar pelicula por titulo o actor")
+        let orderValues = orderBy.split(',').map(pair => { return pair.split(':')[1] }) // orderValues: [valor: release_date, valor: raiting]
+        const orderReleaseDate = orderValues[0];
+        const orderRaiting = orderValues[1];
+        url = discover + `&language=${language}&page=${page}&sort_by=primary_release_date.${orderReleaseDate}`;
+
+    } else {
+        if(genre){
+            console.log("hay genero")
+            // A TENER EN CUENTA, EL GENERO SE PASA POR NUMERO DE ID DEL GENERO QUE USA TMDB
+            url = url + `&sort_by=popularity.desc&with_genres=${genre}`;
+    }}
+
     const headers = {
         'Accept': 'application/json',
         'Authorization': `Bearer ${accessToken}`
