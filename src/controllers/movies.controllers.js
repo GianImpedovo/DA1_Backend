@@ -8,6 +8,30 @@ const discover = 'https://api.themoviedb.org/3/discover/movie?include_adult=fals
 
 const accessToken = process.env.ACCESS_TOKEN;
 
+export const getSignInMovies = async (req, res) => {
+    const url = 'https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1'
+    const headers = {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+    };
+
+    try {
+        let resPeliculas = Array();
+        const response = await axios.get(url, { headers });
+        const peliculas = response.data.results.slice(0, 3)
+        for (let i = 0; i < peliculas.length; i++) {
+            resPeliculas.push({
+                "id": peliculas[i].id,
+                "title": peliculas[i].title,
+                "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
+        }
+        res.send(resPeliculas)
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
 export const getMovies = async (req, res) => {
     const { search, orderBy, genre, limit,language } = req.query;
     const page = 1;

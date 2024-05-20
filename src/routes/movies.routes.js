@@ -1,9 +1,11 @@
 import { Router } from "express";
-import { getMovies, getMovie, clasifiedMovie, getGenre } from "../controllers/movies.controllers.js";
+import { getMovies, getMovie, clasifiedMovie, getGenre, getSignInMovies } from "../controllers/movies.controllers.js";
 
 const movieRouter = Router();
 
 movieRouter.get("/movies/generos", getGenre) 
+
+movieRouter.get('/movies/signIn', getSignInMovies)
 
 movieRouter.get("/movies", getMovies)
 
