@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { getConnection } from '../db/connection.js';
 import { existePelicula, guardarPelicula, existeRegistro } from './users.controllers.js';
 import sql from 'mssql';
+import nlp from 'compromise';
 dotenv.config();
 
 const discover = 'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false'
@@ -35,24 +36,35 @@ export const getSignInMovies = async (req, res) => {
     }
 }
 
+function busquedaTituloActor( search, orderBy ) {
+    // Primero puedo usar compromise para saber si hay nombre o no, en caso que no haya nombre voy directo a buscar
+    // por titulo, si hay nombre comparo que tiene mas resultado si la busqueda de actores o la busqueda de peliculas.
+    // buscar en ambos endpoint y obtener la popularidad
+    const doc = nlp(search)
+    const personas = doc.people().out('array')
+    console.log(personas)
+    let url = ''
+    console.log("buscar pelicula por titulo o actor")
+    let orderValues = orderBy.split(',').map(pair => { return pair.split(':')[1] }) // orderValues: [valor: release_date, valor: raiting]
+    const orderReleaseDate = orderValues[0];
+    const orderRaiting = orderValues[1];
+    return url
+}
+
 export const getMovies = async (req, res) => {
     const { search, orderBy, genre, limit,language } = req.query;
     const page = 1;
     let url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=${page}`;
     if(search){
-        console.log("buscar pelicula por titulo o actor")
-        let orderValues = orderBy.split(',').map(pair => { return pair.split(':')[1] }) // orderValues: [valor: release_date, valor: raiting]
-        const orderReleaseDate = orderValues[0];
-        const orderRaiting = orderValues[1];
-        url = discover + `&language=${language}&page=${page}&sort_by=primary_release_date.${orderReleaseDate}`;
-
+        // Lo primero es fijarme si es un actor o un titulo de pelicula
+        url = busquedaTituloActor(search, orderBy)
     } else {
         if(genre){
-            console.log("hay genero")
             // A TENER EN CUENTA, EL GENERO SE PASA POR NUMERO DE ID DEL GENERO QUE USA TMDB
             url = url + `&sort_by=popularity.desc&with_genres=${genre}`;
     }}
-
+    // ESTO HAY QUE SACARLO CUANDO RESUELVA EL TEMA DE BUSQUEDA !!!!
+    url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=${page}`;
     const headers = {
         'Accept': 'application/json',
         'Authorization': `Bearer ${accessToken}`
@@ -76,9 +88,54 @@ export const getMovies = async (req, res) => {
 
 }
 
+async function sumaVotosPelicula(id) {
+    const pool = await getConnection();
+    try {
+        const result = await pool.request()
+        .input('pelicula_id', sql.Int, id)
+        .query('SELECT suma_votos From Pelicula where id = @pelicula_id;')
+        const sumaVotos = result.recordset[0].suma_votos;
+        return sumaVotos; 
+    } catch (error) {
+        console.error(error);
+        return 0;
+    }
+}
+
+async function obtenerCantidadVotos(peliculaId) {
+    const pool = await getConnection();
+    try {
+        const result = await pool.request()
+        .input('pelicula_id', sql.Int, peliculaId)
+        .query('SELECT cantidad_votos From Pelicula where id = @pelicula_id;')
+        const cantidadVotos = result.recordset[0].cantidad_votos;
+        return cantidadVotos; 
+    } catch (error) {
+        console.error(error);
+        return 0;
+    }
+}
+
+async function obtenerRatingFavorito(peliculaId, usuarioId) {
+    const pool = await getConnection();
+    try {
+        const result = await pool.request()
+        .input('pelicula_id', sql.Int, peliculaId)
+        .input('usuario_id', sql.Int, usuarioId)
+        .query('SELECT usuario_id, rating, favorito FROM Interaccion_pelicula where pelicula_id = @pelicula_id and usuario_id = @usuario_id;')
+        const ratingFavorito = [result.recordset[0].rating, result.recordset[0].favorito]
+        return ratingFavorito
+    } catch (error) {
+        console.error(error);
+        return 0;
+    }
+}
+
 export const getMovie = async (req, res) => {
     const { id } = req.params;
-    const { language } = req.query
+    const { language } = req.query;
+    const { usuarioId } = req.body;
+
     const urlMovie = `https://api.themoviedb.org/3/movie/${id}?language=${language}`;
     const urlCredits = `https://api.themoviedb.org/3/movie/${id}/credits?language=${language}`;
     const headers = {
@@ -91,6 +148,15 @@ export const getMovie = async (req, res) => {
         const responsCredits = await axios.get(urlCredits, { headers });
         const movieData = responseMovie.data;
         const credtisData = responsCredits.data;
+
+        // Datos de la db:
+        const cantidadVotos = await obtenerCantidadVotos(id);
+        const sumaVotos = await sumaVotosPelicula(id);
+        const promedioVotos = (sumaVotos / cantidadVotos).toFixed(1);
+
+        const ratingFavorito = await obtenerRatingFavorito(id, usuarioId);
+        const userRating = ratingFavorito[0];
+        const favorito = ratingFavorito[1];
 
         const directorInfo = credtisData.crew.find(director => director.job === "Director");
         const director = {
@@ -108,9 +174,10 @@ export const getMovie = async (req, res) => {
             "genres": movieData.genres.map(genre => genre.name),
             "releaseDate": movieData.release_date,
             "duration": movieData.runtime,
-            "rating": 0,
-            "numRating": 0,
-            "favorire": true,
+            "userRating": userRating,
+            "movieRating": promedioVotos,
+            "numRating": cantidadVotos,
+            "favorite": favorito,
             "director": director,
             "cast": cast
         }
