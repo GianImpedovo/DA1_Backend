@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { getConnection } from '../db/connection.js';
 import { existePelicula, guardarPelicula, existeRegistro } from './users.controllers.js';
 import sql from 'mssql';
-import nlp from 'compromise';
+
 dotenv.config();
 
 const discover = 'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false'
@@ -36,55 +36,191 @@ export const getSignInMovies = async (req, res) => {
     }
 }
 
-function busquedaTituloActor( search, orderBy ) {
-    // Primero puedo usar compromise para saber si hay nombre o no, en caso que no haya nombre voy directo a buscar
-    // por titulo, si hay nombre comparo que tiene mas resultado si la busqueda de actores o la busqueda de peliculas.
-    // buscar en ambos endpoint y obtener la popularidad
-    const doc = nlp(search)
-    const personas = doc.people().out('array')
-    console.log(personas)
-    let url = ''
-    console.log("buscar pelicula por titulo o actor")
-    let orderValues = orderBy.split(',').map(pair => { return pair.split(':')[1] }) // orderValues: [valor: release_date, valor: raiting]
-    const orderReleaseDate = orderValues[0];
-    const orderRaiting = orderValues[1];
-    return url
+function busquedaHeuristica(busqueda){
+    const palabrasComunes = ["el", "la", "los", "las", "un", "una", "unos", "unas", "al", "en", "the", "a", "an", "of", "on", "at", "by", "with", "from", "to", "into", "within", "out", "up", "down", "over", "under", "between", "among"];
+    const titulo = busqueda.toLowerCase().split(" ")
+    // Caso que el search contenga alguna palabra comun en los titulos que no pertenecen a nombres
+    for (let i = 0; i < titulo.length; i++) {
+        if(palabrasComunes.includes(titulo[i])) return true
+    }
+    return false;
 }
 
-export const getMovies = async (req, res) => {
-    const { search, orderBy, genre, limit,language } = req.query;
-    const page = 1;
-    let url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=${page}`;
-    if(search){
-        // Lo primero es fijarme si es un actor o un titulo de pelicula
-        url = busquedaTituloActor(search, orderBy)
-    } else {
-        if(genre){
-            // A TENER EN CUENTA, EL GENERO SE PASA POR NUMERO DE ID DEL GENERO QUE USA TMDB
-            url = url + `&sort_by=popularity.desc&with_genres=${genre}`;
-    }}
-    // ESTO HAY QUE SACARLO CUANDO RESUELVA EL TEMA DE BUSQUEDA !!!!
-    url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=${page}`;
+async function obtenerPeliculasPorBuscador(busqueda){
+    const url = `https://api.themoviedb.org/3/search/movie?query=${busqueda}`
     const headers = {
         'Accept': 'application/json',
         'Authorization': `Bearer ${accessToken}`
     };
 
     try {
-        let resMovies = Array();
+        let resPeliculas = Array();
+        const response = await axios.get(url, { headers });
+        const peliculas = response.data.results
+        peliculas.sort((a, b) => b.popularity - a.popularity);
+        for (let i = 0; i < peliculas.length; i++) {
+            resPeliculas.push({
+                "id": peliculas[i].id,
+                "title": peliculas[i].title,
+                "popularity": peliculas[i].popularity,
+                "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
+        }
+        return resPeliculas
+
+    } catch (error) {}
+}
+
+async function obtenerActoresPorBuscador(busqueda){
+    const url = `https://api.themoviedb.org/3/search/person?query=${busqueda}`
+    const headers = {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+    };
+
+    try {
+        let resActores = Array();
+        const response = await axios.get(url, { headers });
+        let actores = response.data.results
+        actores = actores.filter(actor => actor.known_for_department == "Acting")
+        actores.sort((a, b) => b.popularity - a.popularity);
+        for (let i = 0; i < actores.length; i++) {
+            if( actores[i].name.includes(busqueda) ){
+                resActores.push({
+                    "id": actores[i].id,
+                    "name": actores[i].name,
+                    "popularity": actores[i].popularity
+                })
+            }
+        }
+        return resActores
+
+    } catch (error) {}
+}
+
+async function obtenerPeliculasActor(actorId){
+    const url = `https://api.themoviedb.org/3/person/${actorId}/movie_credits`
+    const headers = {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+    };
+    try {
+        let resPeliculas = Array();
+        const response = await axios.get(url, { headers });
+        const peliculas = response.data.cast
+        peliculas.sort((a, b) => b.popularity - a.popularity);
+        for (let i = 0; i < peliculas.length; i++) {
+            resPeliculas.push({
+                "id": peliculas[i].id,
+                "title": peliculas[i].title,
+                "popularity": peliculas[i].popularity,
+                "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
+        }
+        
+        return resPeliculas
+
+    } catch (error) {}
+}
+
+async function ordenarListados(peliculas, actores){ 
+    if(actores.length != 0 && peliculas.length != 0){
+        if( peliculas[0].popularity > actores[0].popularity ){ // caso en que la primer pelicula de la lista es mas popular que el actor mencionado
+            for (let i = 0; i < actores.length; i++) {
+                let peliculasActor = await obtenerPeliculasActor(actores[i].id)
+                peliculasActor.sort((a, b) => b.popularity - a.popularity)
+                for (let i = 0; i < peliculasActor.length; i++) {
+                    if(!peliculas.includes(peliculasActor[i])) peliculas.push(peliculasActor[i])
+                }
+            }
+            return peliculas
+        } else {
+            console.log(" el actor tiene mas popularidad")
+            let peliculasActor = await obtenerPeliculasActor(actores[0].id)
+            peliculasActor.sort((a, b) => b.popularity - a.popularity)
+            for (let i = 0; i < peliculas.length; i++) {
+                peliculasActor.push(peliculas[i])
+            }
+            return peliculasActor
+        }
+    }
+}
+
+
+async function busquedaTituloActor( search, orderBy ) {
+    let posiblePelicula = busquedaHeuristica(search)
+    let peliculas = await obtenerPeliculasPorBuscador(search)
+    if(!posiblePelicula){ // Es un simple chequeo si es una posible pelicula entonces solo busco en peliculas
+        console.log("No es posible pelicula")
+        const actores = await obtenerActoresPorBuscador(search)
+        peliculas = await ordenarListados(peliculas, actores)
+    }
+    console.log(peliculas)
+    let orderValues = orderBy.split(',').map(pair => { return pair.split(':')[1] }) // orderValues: [valor: release_date, valor: raiting]
+    const orderReleaseDate = orderValues[0];
+    const orderRating = orderValues[1];
+    let url = "";
+    return url
+}
+
+async function busquedaGenero(language, genre, page){
+    const url = `https://api.themoviedb.org/3/discover/movie?language=${language}&page=${page}&sort_by=popularity.desc&with_genres=${genre}`;
+    const headers = {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+    };
+
+    try {
+        let respuestaPeliculas = Array();
         const response = await axios.get(url, { headers });
         const peliculas = response.data.results
         for (let i = 0; i < peliculas.length; i++) {
-            resMovies.push({
+            respuestaPeliculas.push({
                 "id": peliculas[i].id,
                 "title": peliculas[i].title,
                 "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
         }
-        res.send(resMovies)
+        return respuestaPeliculas
     } catch (error) {
         console.error('Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
     }
+}
+
+async function busquedaMasPopular(language, page){
+    const url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=${page}`;
+
+    const headers = {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+    };
+    try {
+        let respuestaPeliculas = Array();
+        const response = await axios.get(url, { headers });
+        const peliculas = response.data.results
+        for (let i = 0; i < peliculas.length; i++) {
+            respuestaPeliculas.push({
+                "id": peliculas[i].id,
+                "title": peliculas[i].title,
+                "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
+        }
+        return respuestaPeliculas
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+export const getMovies = async (req, res) => {
+    const { search, orderBy, genre, limit,language } = req.query;
+    const page = 1;
+    let respuesta = []
+    if(search){
+        respuesta = await busquedaTituloActor(search, orderBy)
+    } else if (genre) {
+        // A TENER EN CUENTA, EL GENERO SE PASA POR NUMERO: 28=Action DE ID DEL GENERO QUE USA TMDB
+        respuesta = await busquedaGenero(language, genre, page)
+    } else {
+        respuesta = await busquedaMasPopular(language, page)
+    }
+
+    res.send(respuesta)
 
 }
 
