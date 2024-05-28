@@ -8,16 +8,14 @@ dotenv.config();
 
 const discover = 'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false'
 
-// PARA VALIDACIONES PUEDO USAR 'ZOD' 
-
 const accessToken = process.env.ACCESS_TOKEN;
+const headers = {
+    'Accept': 'application/json',
+    'Authorization': `Bearer ${accessToken}`
+};
 
 export const getSignInMovies = async (req, res) => {
     const url = 'https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1'
-    const headers = {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-    };
 
     try {
         let resPeliculas = Array();
@@ -39,19 +37,14 @@ export const getSignInMovies = async (req, res) => {
 function busquedaHeuristica(busqueda){
     const palabrasComunes = ["el", "la", "los", "las", "un", "una", "unos", "unas", "al", "en", "the", "a", "an", "of", "on", "at", "by", "with", "from", "to", "into", "within", "out", "up", "down", "over", "under", "between", "among"];
     const titulo = busqueda.toLowerCase().split(" ")
-    // Caso que el search contenga alguna palabra comun en los titulos que no pertenecen a nombres
     for (let i = 0; i < titulo.length; i++) {
         if(palabrasComunes.includes(titulo[i])) return true
     }
     return false;
 }
 
-async function obtenerPeliculasPorBuscador(busqueda){
-    const url = `https://api.themoviedb.org/3/search/movie?query=${busqueda}`
-    const headers = {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-    };
+async function obtenerPeliculasPorBuscador(busqueda, language, page){
+    const url = `https://api.themoviedb.org/3/search/movie?query=${busqueda}&language=${language}&page=${page}`
 
     try {
         let resPeliculas = Array();
@@ -72,10 +65,6 @@ async function obtenerPeliculasPorBuscador(busqueda){
 
 async function obtenerActoresPorBuscador(busqueda){
     const url = `https://api.themoviedb.org/3/search/person?query=${busqueda}`
-    const headers = {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-    };
 
     try {
         let resActores = Array();
@@ -88,7 +77,8 @@ async function obtenerActoresPorBuscador(busqueda){
                 resActores.push({
                     "id": actores[i].id,
                     "name": actores[i].name,
-                    "popularity": actores[i].popularity
+                    "popularity": actores[i].popularity,
+                    "img": 'https://image.tmdb.org/t/p/original' + actores[i].profile_path
                 })
             }
         }
@@ -99,10 +89,6 @@ async function obtenerActoresPorBuscador(busqueda){
 
 async function obtenerPeliculasActor(actorId){
     const url = `https://api.themoviedb.org/3/person/${actorId}/movie_credits`
-    const headers = {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-    };
     try {
         let resPeliculas = Array();
         const response = await axios.get(url, { headers });
@@ -121,8 +107,11 @@ async function obtenerPeliculasActor(actorId){
     } catch (error) {}
 }
 
+
+// ACA TENDRIA QUE CAMBIAR LOS METODOS DE ORDENAMIENTO SEGUN VARIAS COSAS:
+// EN CASO QUE SEA SOLO UN NOMBRE PUEDO MEZCLAR TODO Y ORDENAR POR POPULARIDAD Y NO PONER PRIMERO LAS DE UN ACTOR O LAS PELICULAS
 async function ordenarListados(peliculas, actores){ 
-    if(actores.length != 0 && peliculas.length != 0){
+    if(actores.length != 0 && peliculas.length != 0){ // ESTO LO TENGO QUE CAMBIAR PORQUE NO TIENE SENTIDO
         if( peliculas[0].popularity > actores[0].popularity ){ // caso en que la primer pelicula de la lista es mas popular que el actor mencionado
             for (let i = 0; i < actores.length; i++) {
                 let peliculasActor = await obtenerPeliculasActor(actores[i].id)
@@ -142,31 +131,25 @@ async function ordenarListados(peliculas, actores){
             return peliculasActor
         }
     }
+    return peliculas
 }
 
-
-async function busquedaTituloActor( search, orderBy ) {
+async function busquedaTituloActor( search, orderBy , language, page) {
     let posiblePelicula = busquedaHeuristica(search)
-    let peliculas = await obtenerPeliculasPorBuscador(search)
+    let peliculas = await obtenerPeliculasPorBuscador(search, language, page)
     if(!posiblePelicula){ // Es un simple chequeo si es una posible pelicula entonces solo busco en peliculas
         console.log("No es posible pelicula")
         const actores = await obtenerActoresPorBuscador(search)
         peliculas = await ordenarListados(peliculas, actores)
     }
-    console.log(peliculas)
     let orderValues = orderBy.split(',').map(pair => { return pair.split(':')[1] }) // orderValues: [valor: release_date, valor: raiting]
     const orderReleaseDate = orderValues[0];
     const orderRating = orderValues[1];
-    let url = "";
-    return url
+    return peliculas
 }
 
 async function busquedaGenero(language, genre, page){
     const url = `https://api.themoviedb.org/3/discover/movie?language=${language}&page=${page}&sort_by=popularity.desc&with_genres=${genre}`;
-    const headers = {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-    };
 
     try {
         let respuestaPeliculas = Array();
@@ -186,11 +169,6 @@ async function busquedaGenero(language, genre, page){
 
 async function busquedaMasPopular(language, page){
     const url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=${page}`;
-
-    const headers = {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-    };
     try {
         let respuestaPeliculas = Array();
         const response = await axios.get(url, { headers });
@@ -212,7 +190,7 @@ export const getMovies = async (req, res) => {
     const page = 1;
     let respuesta = []
     if(search){
-        respuesta = await busquedaTituloActor(search, orderBy)
+        respuesta = await busquedaTituloActor(search, orderBy, language, page)
     } else if (genre) {
         // A TENER EN CUENTA, EL GENERO SE PASA POR NUMERO: 28=Action DE ID DEL GENERO QUE USA TMDB
         respuesta = await busquedaGenero(language, genre, page)
@@ -274,10 +252,6 @@ export const getMovie = async (req, res) => {
 
     const urlMovie = `https://api.themoviedb.org/3/movie/${id}?language=${language}`;
     const urlCredits = `https://api.themoviedb.org/3/movie/${id}/credits?language=${language}`;
-    const headers = {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-    };
 
     try {
         const responseMovie = await axios.get(urlMovie, { headers });
@@ -411,10 +385,6 @@ export const clasifiedMovie = async (req, res) => {
 export const getGenre = async  (req, res) => {
     const { language } = req.query;
     const url = `https://api.themoviedb.org/3/genre/movie/list?language=${language}`;
-    const headers = {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-    };
 
     try {
         const genres = await axios.get(url, { headers });
