@@ -43,9 +43,7 @@ function busquedaHeuristica(busqueda){
     return false;
 }
 
-async function obtenerPeliculasPorBuscador(busqueda, language, page){
-    const url = `https://api.themoviedb.org/3/search/movie?query=${busqueda}&language=${language}&page=${page}`
-
+async function obtenerPeliculas(url){
     try {
         let resPeliculas = Array();
         const response = await axios.get(url, { headers });
@@ -56,11 +54,21 @@ async function obtenerPeliculasPorBuscador(busqueda, language, page){
                 "id": peliculas[i].id,
                 "title": peliculas[i].title,
                 "popularity": peliculas[i].popularity,
+                "release_date": peliculas[i].release_date,
+                "vote_average": peliculas[i].vote_average,
                 "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
         }
         return resPeliculas
 
-    } catch (error) {}
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+async function obtenerPeliculasPorBuscador(busqueda, language, page){
+    const url = `https://api.themoviedb.org/3/search/movie?query=${busqueda}&language=${language}&page=${page}`
+    const respuesta = await obtenerPeliculas(url)
+    return respuesta;
 }
 
 async function obtenerActoresPorBuscador(busqueda){
@@ -89,30 +97,13 @@ async function obtenerActoresPorBuscador(busqueda){
 
 async function obtenerPeliculasActor(actorId){
     const url = `https://api.themoviedb.org/3/person/${actorId}/movie_credits`
-    try {
-        let resPeliculas = Array();
-        const response = await axios.get(url, { headers });
-        const peliculas = response.data.cast
-        peliculas.sort((a, b) => b.popularity - a.popularity);
-        for (let i = 0; i < peliculas.length; i++) {
-            resPeliculas.push({
-                "id": peliculas[i].id,
-                "title": peliculas[i].title,
-                "popularity": peliculas[i].popularity,
-                "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
-        }
-        
-        return resPeliculas
-
-    } catch (error) {}
+    const respuesta = await obtenerPeliculas(url)
+    return respuesta;
 }
 
-
-// ACA TENDRIA QUE CAMBIAR LOS METODOS DE ORDENAMIENTO SEGUN VARIAS COSAS:
-// EN CASO QUE SEA SOLO UN NOMBRE PUEDO MEZCLAR TODO Y ORDENAR POR POPULARIDAD Y NO PONER PRIMERO LAS DE UN ACTOR O LAS PELICULAS
 async function ordenarListados(peliculas, actores){ 
-    if(actores.length != 0 && peliculas.length != 0){ // ESTO LO TENGO QUE CAMBIAR PORQUE NO TIENE SENTIDO
-        if( peliculas[0].popularity > actores[0].popularity ){ // caso en que la primer pelicula de la lista es mas popular que el actor mencionado
+    if(actores.length != 0 && peliculas.length != 0){
+        if( peliculas[0].popularity > actores[0].popularity ){
             for (let i = 0; i < actores.length; i++) {
                 let peliculasActor = await obtenerPeliculasActor(actores[i].id)
                 peliculasActor.sort((a, b) => b.popularity - a.popularity)
@@ -134,55 +125,34 @@ async function ordenarListados(peliculas, actores){
     return peliculas
 }
 
-async function busquedaTituloActor( search, orderBy , language, page) {
+async function busquedaTituloActor( search , language, page) {
     let posiblePelicula = busquedaHeuristica(search)
     let peliculas = await obtenerPeliculasPorBuscador(search, language, page)
     if(!posiblePelicula){ // Es un simple chequeo si es una posible pelicula entonces solo busco en peliculas
-        console.log("No es posible pelicula")
         const actores = await obtenerActoresPorBuscador(search)
         peliculas = await ordenarListados(peliculas, actores)
     }
-    let orderValues = orderBy.split(',').map(pair => { return pair.split(':')[1] }) // orderValues: [valor: release_date, valor: raiting]
-    const orderReleaseDate = orderValues[0];
-    const orderRating = orderValues[1];
     return peliculas
 }
 
 async function busquedaGenero(language, genre, page){
     const url = `https://api.themoviedb.org/3/discover/movie?language=${language}&page=${page}&sort_by=popularity.desc&with_genres=${genre}`;
-
-    try {
-        let respuestaPeliculas = Array();
-        const response = await axios.get(url, { headers });
-        const peliculas = response.data.results
-        for (let i = 0; i < peliculas.length; i++) {
-            respuestaPeliculas.push({
-                "id": peliculas[i].id,
-                "title": peliculas[i].title,
-                "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
-        }
-        return respuestaPeliculas
-    } catch (error) {
-        console.error('Error:', error);
-    }
+    const respuesta = await obtenerPeliculas(url);
+    return respuesta;
 }
 
 async function busquedaMasPopular(language, page){
     const url = `https://api.themoviedb.org/3/movie/now_playing?language=${language}&page=${page}`;
-    try {
-        let respuestaPeliculas = Array();
-        const response = await axios.get(url, { headers });
-        const peliculas = response.data.results
-        for (let i = 0; i < peliculas.length; i++) {
-            respuestaPeliculas.push({
-                "id": peliculas[i].id,
-                "title": peliculas[i].title,
-                "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
-        }
-        return respuestaPeliculas
-    } catch (error) {
-        console.error('Error:', error);
-    }
+    const respuesta = await obtenerPeliculas(url)
+    return respuesta;
+}
+
+function ordenarRespuestaPeliculas(orderBy, respuesta){
+    let orderValues = orderBy.split(',').map(pair => { return pair.split(':')[1] }) // orderValues: [valor: release_date, valor: raiting]
+    const orderReleaseDate = orderValues[0]; // fecha de lanzamiento asc/desc
+    const orderRating = orderValues[1]; // numero de rating asc/desc
+    console.log(respuesta)
+
 }
 
 export const getMovies = async (req, res) => {
@@ -190,12 +160,16 @@ export const getMovies = async (req, res) => {
     const page = 1;
     let respuesta = []
     if(search){
-        respuesta = await busquedaTituloActor(search, orderBy, language, page)
+        respuesta = await busquedaTituloActor(search, language, page)
     } else if (genre) {
         // A TENER EN CUENTA, EL GENERO SE PASA POR NUMERO: 28=Action DE ID DEL GENERO QUE USA TMDB
         respuesta = await busquedaGenero(language, genre, page)
     } else {
         respuesta = await busquedaMasPopular(language, page)
+    }
+
+    if(orderBy){
+        respuesta = ordenarRespuestaPeliculas(orderBy, respuesta)
     }
 
     res.send(respuesta)
