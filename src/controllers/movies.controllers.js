@@ -147,12 +147,37 @@ async function busquedaMasPopular(language, page){
     return respuesta;
 }
 
+//e. El resultado de una búsqueda se podrá ordenar por fecha de publicación y/o calificación.
 function ordenarRespuestaPeliculas(orderBy, respuesta){
-    let orderValues = orderBy.split(',').map(pair => { return pair.split(':')[1] }) // orderValues: [valor: release_date, valor: raiting]
-    const orderReleaseDate = orderValues[0]; // fecha de lanzamiento asc/desc
-    const orderRating = orderValues[1]; // numero de rating asc/desc
-    console.log(respuesta)
-
+    let orderValues = orderBy.split(',').map(pair => { let[key,value] = pair.split(':');
+        return {key, value};
+     });
+    
+     respuesta.sort((a, b) => {
+        for (let order of orderValues) {
+            if (order.key === 'release_date') {
+                let dateA = new Date(a.release_date);
+                let dateB = new Date(b.release_date);
+                if (order.value === 'asc') {
+                    if (dateA < dateB) return -1;
+                    if (dateA > dateB) return 1;
+                } else {
+                    if (dateA > dateB) return -1;
+                    if (dateA < dateB) return 1;
+                }
+            } else if (order.key === 'vote_average') {
+                if (order.value === 'asc') {
+                    if (a.vote_average < b.vote_average) return -1;
+                    if (a.vote_average > b.vote_average) return 1;
+                } else {
+                    if (a.vote_average > b.vote_average) return -1;
+                    if (a.vote_average < b.vote_average) return 1;
+                }
+            }
+        }
+        return 0;
+    });
+    return respuesta;
 }
 
 export const getMovies = async (req, res) => {
