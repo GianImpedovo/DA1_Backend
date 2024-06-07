@@ -1,27 +1,15 @@
 import { getConnection } from "../db/connection.js";
 import sql from 'mssql';
-
-export const getUsers = async (req, res) => {
-    try {
-        const pool = await getConnection();
-        const result = await pool.request().query("SELECT * FROM usuarios");
-        res.json(result.recordset);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al obtener usuarios.' });
-    }
-};
+import { UserModel } from "../models/user.js";
 
 export const getUser = async (req, res) => {
+    const GoogleId = req.params.id
     try {
-        const pool = await getConnection();
-        const result = await pool.request()
-            .input('id', sql.Int, req.params.id)
-            .query("SELECT * FROM usuarios WHERE user_id = @id");
-        if (!result.recordset.length) {
+        const result = await UserModel.getUser(GoogleId)
+        if (!result) {
             return res.status(404).json({ message: 'Usuario no encontrado.' });
         }
-        res.json(result.recordset[0]);
+        res.json(result);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener usuario.' });
@@ -30,17 +18,12 @@ export const getUser = async (req, res) => {
 
 export const postUser = async (req, res) => {
     try {
-        const pool = await getConnection();
-        const result = await pool.request()
-            .input('Name', sql.NVarChar, req.body.Name)
-            .input('Nickname', sql.NVarChar, req.body.Nickname)
-            .input('Email', sql.NVarChar, req.body.Email)
-            .query("INSERT INTO usuarios (nombre, nickname, correo_electronico) VALUES (@Name, @Nickname, @Email); SELECT SCOPE_IDENTITY() AS id;");
+        const result = await UserModel.postUser(req.body)
         res.json({
-            id: result.recordset[0].id,
-            name: req.body.Name,
-            nickname: req.body.Nickname,
-            email: req.body.Email
+            GoogleId: result.GoogleId,
+            name: result.Name,
+            nickname: result.Nickname,
+            email: result.Email
         });
     } catch (error) {
         console.error(error);
@@ -50,17 +33,8 @@ export const postUser = async (req, res) => {
 
 export const putUser = async (req, res) => {
     try {
-        const pool = await getConnection();
-        const result = await pool.request()
-            .input('id', sql.Int, req.params.id)
-            .input('Name', sql.NVarChar, req.body.Name)
-            .input('Nickname', sql.NVarChar, req.body.Nickname)
-            .input('Email', sql.NVarChar, req.body.Email)
-            .query("UPDATE usuarios SET nombre = @Name, nickname = @Nickname, correo_electronico = @Email WHERE user_id = @id");
-        if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({ message: 'Usuario no encontrado.' });
-        }
-        res.send("Usuario actualizado");
+        const result = await UserModel.putUser(req.params.id, body)
+        res.send(result);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al actualizar usuario.' });
@@ -68,22 +42,15 @@ export const putUser = async (req, res) => {
 };
 
 export const deleteUser = async (req, res) => {
+    const GoogleId = req.body.id
     try {
-        const pool = await getConnection();
-        const result = await pool.request()
-            .input('id', sql.Int, req.params.id)
-            .query("DELETE FROM usuarios WHERE user_id = @id");
-        if (result.recordset[0] === 0) {
-            return res.status(404).json({ message: 'Usuario no encontrado.' });
-        }
-        res.send('Usuario eliminado');
+        const result = await UserModel.deleteUser(GoogleId)
+        res.send(result);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al eliminar usuario.' });
     }
 };
-
-
 
 export const getFavorites = async (req, res) => {
     const { id } = req.params
@@ -91,7 +58,7 @@ export const getFavorites = async (req, res) => {
         const pool = await getConnection();
         const result = await pool.request()
             .input('usuario_id', sql.Int, id)
-            .query('SELECT * FROM Interaccion_pelicula WHERE usuario_id = @usuario_id AND favorito = 1');
+            .query('SELECT * FROM Interaccion_pelicula WHERE google_id = @usuario_id AND favorito = 1');
         if (result.rowsAffected[0] === 0) {
             return res.status(404).json({ message: 'Registro no encontrado' });
         }
