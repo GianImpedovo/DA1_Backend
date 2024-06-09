@@ -1,4 +1,3 @@
-import { deleteUser } from "../controllers/users.controllers.js";
 import { getConnection } from "../db/connection.js";
 import sql from 'mssql';
 
@@ -17,9 +16,7 @@ export class UserModel {
                 message: "Fallo al obtener usuario"
             }
         }
-
     }
-
 
     static async postUser( body ){
         const { Name, Nickname, Email, GoogleId, fotoPerfil } = body
