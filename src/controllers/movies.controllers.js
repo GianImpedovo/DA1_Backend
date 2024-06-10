@@ -1,8 +1,9 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import { getConnection } from '../db/connection.js';
-import { existePelicula, guardarPelicula, existeRegistro } from './users.controllers.js';
+import { existeRegistro } from './users.controllers.js';
 import sql from 'mssql';
+import { MovieModel } from '../models/movie.js';
 
 dotenv.config();
 
@@ -204,11 +205,8 @@ export const getMovies = async (req, res) => {
 async function sumaVotosPelicula(id) {
     const pool = await getConnection();
     try {
-        const result = await pool.request()
-        .input('pelicula_id', sql.Int, id)
-        .query('SELECT suma_votos From Pelicula where id = @pelicula_id;')
-        const sumaVotos = result.recordset[0].suma_votos;
-        return sumaVotos; 
+        const result = await MovieModel.getSumaVotos(id)
+        return result; 
     } catch (error) {
         console.error(error);
         return 0;
@@ -216,13 +214,9 @@ async function sumaVotosPelicula(id) {
 }
 
 async function obtenerCantidadVotos(peliculaId) {
-    const pool = await getConnection();
     try {
-        const result = await pool.request()
-        .input('pelicula_id', sql.Int, peliculaId)
-        .query('SELECT cantidad_votos From Pelicula where id = @pelicula_id;')
-        const cantidadVotos = result.recordset[0].cantidad_votos;
-        return cantidadVotos; 
+        const result = await MovieModel.getCantidadVotos(peliculaId)
+        return result; 
     } catch (error) {
         console.error(error);
         return 0;
@@ -299,24 +293,17 @@ export const getMovie = async (req, res) => {
 
 }
 
-const restarAntiguoRating = async (rating, movieId, pool) => {
+const restarAntiguoRating = async (rating, movieId) => {
     try {
-        await pool.request()
-        .input('pelicula_id', sql.Int, movieId)
-        .input('rating', sql.Int, rating)
-        .query('UPDATE Pelicula SET suma_votos = suma_votos - @rating WHERE id = @pelicula_id;')
+        await MovieModel.restarRating(rating, movieId)
     } catch (error) {
         console.error(error);
     }
 }
 
-const sumarNuevoRating = async (rating, movieId, pool) => {
+const sumarNuevoRating = async (rating, movieId) => {
     try {
-        await pool.request()
-        .input('pelicula_id', sql.Int, movieId)
-        .input('rating', sql.Int, rating)
-        .query('UPDATE Pelicula SET suma_votos = suma_votos + @rating WHERE id = @pelicula_id;')
-
+        await MovieModel.sumarRating(rating, movieId)
     } catch (error) {
         console.error(error);
     }
@@ -329,8 +316,8 @@ const actualizarRegistroPelicula = async (rating, userId, movieId, pool) => {
         .input('pelicula_id', sql.Int, movieId)
         .query('SELECT rating FROM Interaccion_pelicula WHERE usuario_id = @usuario_id AND pelicula_id = @pelicula_id;')
         ratingViejo = ratingViejo.recordset[0].rating
-        await restarAntiguoRating(ratingViejo, movieId, pool)
-        await sumarNuevoRating(rating, movieId, pool)
+        await restarAntiguoRating(ratingViejo, movieId)
+        await sumarNuevoRating(rating, movieId)
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al buscar registro' });
@@ -348,9 +335,9 @@ export const clasifiedMovie = async (req, res) => {
     try {
         const pool = await getConnection();
         let result;
-        const estaPelicula = await existePelicula( movieId, pool )
+        const estaPelicula = await MovieModel.existMovie(movieId)
         if(!estaPelicula){
-            await guardarPelicula(movieId, 1, rating, pool)
+            await MovieModel.postMovie(movieId, 1, rating)
         }
         const estaRegistro = await existeRegistro( userId, movieId, pool)
         if(estaRegistro){ // si esta el registro solo actualizo el campo del rating que pone el usuario

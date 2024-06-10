@@ -5,9 +5,14 @@ dotenv.config();
 const key = process.env.SECRET_KEY
 
 export function createToken(user){
-    return jwt.sign({ id:  user.id }, key, {
-        expiresIn: 86400 // Expira en 24 horas
-    })
+    const expiresIn = 600
+    const expirationDate = Math.floor(Date.now() / 1000) + expiresIn;
+    return jwt.sign({ 
+        id:  user.GoogleId,
+        exp: expirationDate
+    }, 
+    key
+    )
 }
 
 export function validateToken(req, res, next){
@@ -15,11 +20,16 @@ export function validateToken(req, res, next){
     if (!bearer) return res.status(401).send({ auth: false, message: 'Token no proporcionado.' });
 
     const token = bearer.split(" ")[1] // Obtengo unicamente el token que viene en formato: bearer <token>, usando split -> ["bearer", "<token>"]
-    jwt.verify(token, key, (error, user) => {
+    jwt.verify(token, key, (error, decodedToken) => {
         if(error){
             res.send("Acceso denegado")
         } else {
-            next()
+            const currentDate = Math.floor(Date.now() / 1000); // Fecha actual en segundos
+            if (decodedToken.exp <= currentDate) {
+                res.status(401).send("El token ha expirado");
+            }
+
+            next();
         }
     })
 }

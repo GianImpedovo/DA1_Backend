@@ -1,50 +1,67 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { createToken, validateToken } from '../middleware/jwtMiddleware.js';
+import { UserModel } from '../models/user.js';
 dotenv.config();
 
-const key = process.env.SECRET_KEY
-const user = {
-    id: 1,
-    name: "Pepe",
-    nickName: "Pepito",
-    email: "pepe@example.com",
-    imgUser: "/img.com",
-    accessToken: "",
-    googleId: "string",
-    expiresIn: 0
-};
+export const postLogin = async (req, res) => {  // CREO TOKEN
+    const { googleId } = req.body;
+    try {
+        const user = await UserModel.getUser(googleId)
+        
+        if(user){
+            const accessToken = createToken(user);
+            const decodeToken = jwt.decode(accessToken)
+            res.header('authorization', accessToken).json({
+                message: "Usuario correcto",
+                token: accessToken,
+                expiresIn: decodeToken.exp,
+                user: {
+                    name: user.nombre,
+                    lastname: user.apellido,
+                    nickname: user.nickname,
+                    email: user.correo_electronico,
+                    googleId: user.google_id,
+                    photo: user.foto_perfil
+                }
+            });
+        } else {
+            
+            const newUser = await UserModel.postUser(req.body)
+            const accessToken = createToken(newUser);
+            const decodeToken = jwt.decode(accessToken)
+            res.header('authorization', accessToken).json({
+                message: "Usuario creado y autenticado",
+                token: accessToken,
+                expiresIn: decodeToken.exp,
+                user: {
+                    name: newUser.nombre,
+                    lastname: newUser.apellido,
+                    nickname: newUser.nickname,
+                    email: newUser.correo_electronico,
+                    googleId: newUser.googleId,
+                    photo: newUser.foto_perfil
+                }
+            });
+        }
 
-export const postLogin = async (req, res) => {
-    // Aquí verificarías las credenciales del usuario, y si son válidas, generarías un token JWT
-    const { googleToken } = req.body;
-    if(googleToken === user.googleId ){
-        const accessToken = createToken(user);
-        res.header('authorization', accessToken).json({
-            message: "Usuario correcto", 
-            token: accessToken
-        });
-    } else {
-        res.status(401).send({ error: " No se encontro el usuario "})
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al autenticar usuario.' });
     }
 }
 
-export const putLogin = async (req, res) => {
-    const { expiresIn } = req.body
+export const putLogin = async (req, res) => {  // RENOVAR TOKEN
+    const { user } = req.body
     const accessToken = createToken(user);
-    const expireDate = new Date(expiresIn)
-    if( expireDate < Date.now()){
-        // Renovar token
-        res.header('authorization', accessToken).json({
-            message: "Token renovado", 
-            token: accessToken
-        });
-    } else {
-        res.send("Token expirado")
-    }
-    
+    const decodeToken = jwt.decode(accessToken)
+    res.header('authorization', accessToken).json({
+        message: "Token renovado", 
+        token: accessToken,
+        expiresIn: decodeToken.exp
+    });
 }
 
-export const deleteLogin = async (req, res) => {
+export const deleteLogin = async (req, res) => { // Debatir con las chicas porque podes simplemente eliminar el token desde el cliente
     res.json({message: "delete login"})
 }
