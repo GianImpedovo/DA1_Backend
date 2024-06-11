@@ -31,7 +31,7 @@ export class UserModel {
                 .input('googleId', sql.BigInt, BigInt(googleId))
                 .input('fotoPerfil', sql.NVarChar, fotoPerfil)
                 .query("INSERT INTO Usuario (nombre, nickname, correo_electronico, google_id, foto_perfil, fecha_registro, apellido) VALUES (@name, @nickname, @email, @googleId, @fotoPerfil, GETDATE(), @lastname); SELECT SCOPE_IDENTITY() AS id;");
-    
+            
             return {
                 id: googleId,
                 name: name,

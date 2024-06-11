@@ -29,17 +29,18 @@ export const postLogin = async (req, res) => {  // CREO TOKEN
             const newUser = await UserModel.postUser(req.body)
             const accessToken = createToken(newUser);
             const decodeToken = jwt.decode(accessToken)
+            console.log(newUser)
             res.header('authorization', accessToken).json({
                 message: "Usuario creado y autenticado",
                 token: accessToken,
                 expiresIn: decodeToken.exp,
                 user: {
-                    id: newUser.google_id,
-                    name: newUser.nombre,
-                    lastname: newUser.apellido,
+                    id: newUser.id,
+                    name: newUser.name,
+                    lastname: newUser.lastname,
                     nickname: newUser.nickname,
-                    email: newUser.correo_electronico,
-                    photo: newUser.foto_perfil
+                    email: newUser.email,
+                    photo: newUser.photo
                 }
             });
         }
