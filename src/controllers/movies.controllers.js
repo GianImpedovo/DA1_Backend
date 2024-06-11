@@ -182,8 +182,7 @@ function ordenarRespuestaPeliculas(orderBy, respuesta){
 }
 
 export const getMovies = async (req, res) => {
-    const { search, orderBy, genre, limit,language } = req.query;
-    const page = 1;
+    const { search, orderBy, genre, limit,language, page } = req.query;
     let respuesta = []
     if(search){
         respuesta = await busquedaTituloActor(search, language, page)

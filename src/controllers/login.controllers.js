@@ -8,7 +8,6 @@ export const postLogin = async (req, res) => {  // CREO TOKEN
     const { googleId } = req.body;
     try {
         const user = await UserModel.getUser(googleId)
-        console.log(user)
         if(user){
             const accessToken = createToken(user);
             const decodeToken = jwt.decode(accessToken)
@@ -16,7 +15,14 @@ export const postLogin = async (req, res) => {  // CREO TOKEN
                 message: "Usuario correcto",
                 token: accessToken,
                 expiresIn: decodeToken.exp,
-                user: user
+                user: {
+                    id: user.google_id,
+                    name: user.nombre,
+                    lastname: user.apellido,
+                    nickname: user.nickname,
+                    email: user.correo_electronico,
+                    photo: user.foto_perfil
+                }
             });
         } else {
             
@@ -27,7 +33,14 @@ export const postLogin = async (req, res) => {  // CREO TOKEN
                 message: "Usuario creado y autenticado",
                 token: accessToken,
                 expiresIn: decodeToken.exp,
-                user: newUser
+                user: {
+                    id: newUser.google_id,
+                    name: newUser.nombre,
+                    lastname: newUser.apellido,
+                    nickname: newUser.nickname,
+                    email: newUser.correo_electronico,
+                    photo: newUser.foto_perfil
+                }
             });
         }
 

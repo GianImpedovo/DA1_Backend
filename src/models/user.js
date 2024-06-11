@@ -10,14 +10,7 @@ export class UserModel {
                 .input('google_id', sql.BigInt, BigInt(googleId))
                 .query("SELECT * FROM Usuario WHERE google_id = @google_id");
             const userData = result.recordset[0]
-            return {
-                id: userData.google_id,
-                name: userData.nombre,
-                lastname: userData.apellido,
-                nickname: userData.nickname,
-                email: userData.correo_electronico,
-                photo: userData.foto_perfil
-            }
+            return userData
         } catch (error) {
             return {
                 error: error,

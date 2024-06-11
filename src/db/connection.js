@@ -1,11 +1,11 @@
 import sql from 'mssql'
 
 const dbSettings = {
-    user: 'admin',  //'admin'
-    password: 'da1_uade_pass',  //'da1_uade_pass'
-    server: 'db-da1-uade.chi2ucssol16.us-east-2.rds.amazonaws.com', // db-da1-uade.chi2ucssol16.us-east-2.rds.amazonaws.com
+    user: 'prueba',  //'admin'
+    password: 'prueba',  //'da1_uade_pass'
+    server: 'localhost', // db-da1-uade.chi2ucssol16.us-east-2.rds.amazonaws.com
     database: 'DA1',
-    port: 1433,
+    //port: 1433,
     options: {
         encrypt: false,
         trustServerCertificate: true,
