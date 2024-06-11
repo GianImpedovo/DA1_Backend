@@ -7,8 +7,8 @@ export class UserModel {
         try {
             const pool = await getConnection();
             const result = await pool.request()
-                .input('google_id', sql.NVarChar, googleId)
-                .query("SELECT * FROM usuarios WHERE google_id = @google_id");
+                .input('google_id', sql.BigInt, BigInt(googleId))
+                .query("SELECT * FROM Usuario WHERE google_id = @google_id");
             return result.recordset[0]
         } catch (error) {
             return {
@@ -27,9 +27,9 @@ export class UserModel {
                 .input('nickname', sql.NVarChar, nickname)
                 .input('lastname', sql.NVarChar, lastname)
                 .input('email', sql.NVarChar, email)
-                .input('googleId', sql.NVarChar, googleId)
+                .input('googleId', sql.BigInt, BigInt(googleId))
                 .input('fotoPerfil', sql.NVarChar, fotoPerfil)
-                .query("INSERT INTO usuarios (nombre, nickname, correo_electronico, google_id, foto_perfil, fecha_registro, apellido) VALUES (@name, @nickname, @email, @googleId, @fotoPerfil, GETDATE(), @lastname); SELECT SCOPE_IDENTITY() AS id;");
+                .query("INSERT INTO Usuario (nombre, nickname, correo_electronico, google_id, foto_perfil, fecha_registro, apellido) VALUES (@name, @nickname, @email, @googleId, @fotoPerfil, GETDATE(), @lastname); SELECT SCOPE_IDENTITY() AS id;");
     
             return {
                 name: name,
@@ -49,17 +49,17 @@ export class UserModel {
     }
 
     static async putUser( id, body ) {
-        const GoogleId = id
+        const googleId = id
         const { name, nickname, email, lastname } = body
         try {
             const pool = await getConnection();
             const result = await pool.request()
-                .input('id', sql.Int, GoogleId)
+                .input('id', sql.BigInt, BigInt(googleId))
                 .input('name', sql.NVarChar, name)
                 .input('nickname', sql.NVarChar, nickname)
                 .input('lastname', sql.NVarChar, lastname)
                 .input('email', sql.NVarChar, email)
-                .query("UPDATE usuarios SET nombre = @name, nickname = @nickname, correo_electronico = @email, apellido = @lastname WHERE google_id = @id");
+                .query("UPDATE Usuario SET nombre = @name, nickname = @nickname, correo_electronico = @email, apellido = @lastname WHERE google_id = @id");
             if (result.rowsAffected[0] === 0) {
                 return ({ message: 'Usuario no encontrado.' });
             }
@@ -77,8 +77,8 @@ export class UserModel {
         try {
             const pool = await getConnection();
             const result = await pool.request()
-                .input('google_id', sql.NVarChar, google_id)
-                .query("DELETE FROM usuarios WHERE google_id = @google_id");
+                .input('google_id', sql.BigInt, BigInt(google_id))
+                .query("DELETE FROM Usuario WHERE google_id = @google_id");
             if (result.recordset[0] === 0) {
                 return { message: 'Usuario no encontrado.' }
             }

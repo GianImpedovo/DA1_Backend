@@ -1,9 +1,9 @@
 import axios from 'axios';
 import dotenv from 'dotenv';
 import { getConnection } from '../db/connection.js';
-import { existeRegistro } from './users.controllers.js';
 import sql from 'mssql';
 import { MovieModel } from '../models/movie.js';
+import { InteractionMovieModel } from '../models/interactionMovie.js';
 
 dotenv.config();
 
@@ -309,13 +309,9 @@ const sumarNuevoRating = async (rating, movieId) => {
     }
 }
 
-const actualizarRegistroPelicula = async (rating, userId, movieId, pool) => {
+const actualizarRegistroPelicula = async (rating, userId, movieId) => {
     try {
-        let ratingViejo = await pool.request()
-        .input('usuario_id', sql.Int, userId)
-        .input('pelicula_id', sql.Int, movieId)
-        .query('SELECT rating FROM Interaccion_pelicula WHERE usuario_id = @usuario_id AND pelicula_id = @pelicula_id;')
-        ratingViejo = ratingViejo.recordset[0].rating
+        let ratingViejo = await InteractionMovieModel.getRating(userId, movieId)
         await restarAntiguoRating(ratingViejo, movieId)
         await sumarNuevoRating(rating, movieId)
     } catch (error) {
@@ -339,9 +335,9 @@ export const clasifiedMovie = async (req, res) => {
         if(!estaPelicula){
             await MovieModel.postMovie(movieId, 1, rating)
         }
-        const estaRegistro = await existeRegistro( userId, movieId, pool)
+        const estaRegistro = await InteractionMovieModel.exist(userId, movieId)
         if(estaRegistro){ // si esta el registro solo actualizo el campo del rating que pone el usuario
-            await actualizarRegistroPelicula(rating, userId, movieId, pool)
+            await actualizarRegistroPelicula(rating, userId, movieId)
             result = await pool.request()
             .input('usuario_id', sql.Int, userId)
             .input('pelicula_id', sql.Int, movieId)

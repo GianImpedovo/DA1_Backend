@@ -8,7 +8,7 @@ export const postLogin = async (req, res) => {  // CREO TOKEN
     const { googleId } = req.body;
     try {
         const user = await UserModel.getUser(googleId)
-        
+        console.log(user)
         if(user){
             const accessToken = createToken(user);
             const decodeToken = jwt.decode(accessToken)

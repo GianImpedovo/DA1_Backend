@@ -2,6 +2,7 @@ import { getConnection } from "../db/connection.js";
 import sql from 'mssql';
 import { UserModel } from "../models/user.js";
 import { MovieModel } from "../models/movie.js";
+import { InteractionMovieModel } from "../models/interactionMovie.js";
 
 export const getUser = async (req, res) => {
     const GoogleId = req.params.id
@@ -57,29 +58,13 @@ export const deleteUser = async (req, res) => {
 export const getFavorites = async (req, res) => {
     const { id } = req.params
     try {
-        const pool = await getConnection();
-        const result = await pool.request()
-            .input('usuario_id', sql.Int, id)
-            .query('SELECT * FROM Interaccion_pelicula WHERE google_id = @usuario_id AND favorito = 1');
-        if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({ message: 'Registro no encontrado' });
-        }
-        const favoritos = result.recordset
-        res.send(favoritos);
+        const result = await InteractionMovieModel.getFavorite(id)
+        res.send(result);  // Ojo este no es el resultado final, tengo que usar los datos de TMDB []
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener favoritos' });
     }
-}
-
-export const existeRegistro = async (id, movieId, pool) => {
-    // query : SELECT COUNT(*) AS count FROM interaccion_pelicula WHERE user_id = ? AND pelicula_id = ?
-    const registro = await pool.request()
-    .input('usuario_id', sql.Int, id)
-    .input('pelicula_id', sql.Int, movieId)
-    .query('SELECT COUNT(*) AS count FROM interaccion_pelicula WHERE usuario_id = @usuario_id AND pelicula_id = @pelicula_id')
-    return registro.recordset[0].count === 1
 }
 
 export const putFavorite = async (req, res) => {
@@ -92,7 +77,7 @@ export const putFavorite = async (req, res) => {
             await MovieModel.postMovie(movieId, 0, 0)
         }
 
-        const estaRegistro = await existeRegistro(id, movieId, pool)
+        const estaRegistro = await InteractionMovieModel.exist(id, movieId) 
 
         if(estaRegistro){
             result = await pool.request()
