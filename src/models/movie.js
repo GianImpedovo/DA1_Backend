@@ -77,4 +77,16 @@ export class MovieModel {
             
         }
     }
+
+    static async updateCantidadVotos(rating, movieId){
+        try {
+            const pool = await getConnection();
+            await pool.request()
+            .input('pelicula_id', sql.Int, movieId)
+            .input('rating', sql.Int, rating)
+            .query('UPDATE Pelicula SET cantidad_votos = cantidad_votos + 1, suma_votos = suma_votos + @rating WHERE id = @pelicula_id;')
+        } catch (error) {
+            
+        }
+    }
 }

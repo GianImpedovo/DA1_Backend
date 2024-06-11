@@ -223,25 +223,20 @@ async function obtenerCantidadVotos(peliculaId) {
     }
 }
 
-async function obtenerRatingFavorito(peliculaId, usuarioId) {
-    const pool = await getConnection();
+async function obtenerRatingFavorito(movieId, userId) {
     try {
-        const result = await pool.request()
-        .input('pelicula_id', sql.Int, peliculaId)
-        .input('usuario_id', sql.Int, usuarioId)
-        .query('SELECT usuario_id, rating, favorito FROM Interaccion_pelicula where pelicula_id = @pelicula_id and usuario_id = @usuario_id;')
-        const ratingFavorito = [result.recordset[0].rating, result.recordset[0].favorito]
-        return ratingFavorito
+        const result = await InteractionMovieModel.getRegistro(userId, movieId)
+        return result
     } catch (error) {
         console.error(error);
-        return 0;
+        return {};
     }
 }
 
 export const getMovie = async (req, res) => {
     const { id } = req.params;
     const { language } = req.query;
-    const { usuarioId } = req.body;
+    const { userId } = req.body;
 
     const urlMovie = `https://api.themoviedb.org/3/movie/${id}?language=${language}`;
     const urlCredits = `https://api.themoviedb.org/3/movie/${id}/credits?language=${language}`;
@@ -257,9 +252,9 @@ export const getMovie = async (req, res) => {
         const sumaVotos = await sumaVotosPelicula(id);
         const promedioVotos = (sumaVotos / cantidadVotos).toFixed(1);
 
-        const ratingFavorito = await obtenerRatingFavorito(id, usuarioId);
-        const userRating = ratingFavorito[0];
-        const favorito = ratingFavorito[1];
+        const ratingFavorito = await obtenerRatingFavorito(id, userId);
+        const userRating = ratingFavorito.rating;
+        const favorito = ratingFavorito.favorite;
 
         const directorInfo = credtisData.crew.find(director => director.job === "Director");
         const director = {
@@ -329,7 +324,6 @@ export const clasifiedMovie = async (req, res) => {
     }
 
     try {
-        const pool = await getConnection();
         let result;
         const estaPelicula = await MovieModel.existMovie(movieId)
         if(!estaPelicula){
@@ -338,19 +332,10 @@ export const clasifiedMovie = async (req, res) => {
         const estaRegistro = await InteractionMovieModel.exist(userId, movieId)
         if(estaRegistro){ // si esta el registro solo actualizo el campo del rating que pone el usuario
             await actualizarRegistroPelicula(rating, userId, movieId)
-            result = await pool.request()
-            .input('usuario_id', sql.Int, userId)
-            .input('pelicula_id', sql.Int, movieId)
-            .input('rating', sql.Int, rating)
-            .query("UPDATE Interaccion_pelicula SET rating = @rating WHERE usuario_id = @usuario_id AND pelicula_id = @pelicula_id; ");
+            await InteractionMovieModel.updateRating(rating, userId, movieId)
         } else { // Si no esta el registro creo uno nuevo con toda la info 
-            result = await pool.request()
-            .input('usuario_id', sql.Int, userId)
-            .input('pelicula_id', sql.Int, movieId)
-            .input('rating', sql.Int, rating)
-            .input('favorito', sql.Int, 0)
-            .query('INSERT INTO Interaccion_pelicula ( usuario_id, pelicula_id, rating, favorito) VALUES (@usuario_id, @pelicula_id, @rating, @favorito);'
-                +  'UPDATE Pelicula SET cantidad_votos = cantidad_votos + 1, suma_votos = suma_votos + @rating WHERE id = @pelicula_id;')
+            await InteractionMovieModel.insertInteraction(userId, movieId, rating, 0)
+            await MovieModel.updateCantidadVotos(rating, movieId)
         }
 
         if (result.rowsAffected[0] === 0) {

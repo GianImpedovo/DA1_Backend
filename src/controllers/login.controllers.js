@@ -16,14 +16,7 @@ export const postLogin = async (req, res) => {  // CREO TOKEN
                 message: "Usuario correcto",
                 token: accessToken,
                 expiresIn: decodeToken.exp,
-                user: {
-                    name: user.nombre,
-                    lastname: user.apellido,
-                    nickname: user.nickname,
-                    email: user.correo_electronico,
-                    googleId: user.google_id,
-                    photo: user.foto_perfil
-                }
+                user: user
             });
         } else {
             
@@ -34,14 +27,7 @@ export const postLogin = async (req, res) => {  // CREO TOKEN
                 message: "Usuario creado y autenticado",
                 token: accessToken,
                 expiresIn: decodeToken.exp,
-                user: {
-                    name: newUser.nombre,
-                    lastname: newUser.apellido,
-                    nickname: newUser.nickname,
-                    email: newUser.correo_electronico,
-                    googleId: newUser.googleId,
-                    photo: newUser.foto_perfil
-                }
+                user: newUser
             });
         }
 

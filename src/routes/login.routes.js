@@ -6,5 +6,6 @@ const loginRouter = Router();
 
 loginRouter.post('/login', postLogin);
 loginRouter.put('/login', validateToken, putLogin)
+loginRouter.delete('/login', validateToken, deleteLogin)
 
 export default loginRouter

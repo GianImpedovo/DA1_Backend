@@ -9,7 +9,15 @@ export class UserModel {
             const result = await pool.request()
                 .input('google_id', sql.BigInt, BigInt(googleId))
                 .query("SELECT * FROM Usuario WHERE google_id = @google_id");
-            return result.recordset[0]
+            const userData = result.recordset[0]
+            return {
+                id: userData.google_id,
+                name: userData.nombre,
+                lastname: userData.apellido,
+                nickname: userData.nickname,
+                email: userData.correo_electronico,
+                photo: userData.foto_perfil
+            }
         } catch (error) {
             return {
                 error: error,
@@ -32,11 +40,11 @@ export class UserModel {
                 .query("INSERT INTO Usuario (nombre, nickname, correo_electronico, google_id, foto_perfil, fecha_registro, apellido) VALUES (@name, @nickname, @email, @googleId, @fotoPerfil, GETDATE(), @lastname); SELECT SCOPE_IDENTITY() AS id;");
     
             return {
+                id: googleId,
                 name: name,
                 lastname: lastname,
                 nickname: nickname,
                 email: email,
-                googleId: googleId,
                 photo: fotoPerfil
             }
         } catch (error) {
