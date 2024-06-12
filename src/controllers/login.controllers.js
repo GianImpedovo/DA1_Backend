@@ -65,7 +65,6 @@ export const postLogin = async (req, res) => {  // CREO TOKEN
             const newUser = await UserModel.postUser(req.body)
             const accessToken = createToken(newUser);
             const decodeToken = jwt.decode(accessToken)
-            console.log(newUser)
             res.header('authorization', accessToken).json({
                 message: "Usuario creado y autenticado",
                 token: accessToken,

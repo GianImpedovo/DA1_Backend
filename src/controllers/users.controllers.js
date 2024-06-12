@@ -45,9 +45,9 @@ export const putUser = async (req, res) => {
 };
 
 export const deleteUser = async (req, res) => {
-    const GoogleId = req.body.id
+    const {id} = req.params
     try {
-        const result = await UserModel.deleteUser(GoogleId)
+        const result = await UserModel.deleteUser(id)     
         res.send(result);
     } catch (error) {
         console.error(error);

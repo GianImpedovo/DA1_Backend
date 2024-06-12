@@ -74,14 +74,14 @@ export class UserModel {
     }
 
 
-    static async deleteUser(googleId){
+    static async deleteUser(id){
         try {
             const pool = await getConnection();
             const result = await pool.request()
-                .input('google_id', sql.VarChar, googleId)
+                .input('google_id', sql.VarChar, id)
                 .query("DELETE FROM Usuario WHERE google_id = @google_id");
-            if (result.recordset[0] === 0) {
-                return { message: 'Usuario no encontrado.' }
+            if (result.rowsAffected[0] === 1) {
+                return { message: 'Usuario Eliminado.' }
             }
             return { message: 'Usuario no encontrado.' }
         } catch (error) {

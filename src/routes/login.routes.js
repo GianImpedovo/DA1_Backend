@@ -5,7 +5,7 @@ import { validateToken } from "../middleware/jwtMiddleware.js";
 const loginRouter = Router();
 
 loginRouter.post('/login', postLogin);
-loginRouter.post('/login/token', postLoginToken);
+loginRouter.post('/login/token', validateToken, postLoginToken);
 loginRouter.put('/login', validateToken, putLogin)
 loginRouter.delete('/login', validateToken, deleteLogin)
 
