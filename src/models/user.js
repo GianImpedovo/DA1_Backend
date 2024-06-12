@@ -1,5 +1,5 @@
 import { getConnection } from "../db/connection.js";
-import sql from 'mssql';
+import   sql  from 'mssql';
 
 export class UserModel {
 
@@ -7,7 +7,7 @@ export class UserModel {
         try {
             const pool = await getConnection();
             const result = await pool.request()
-                .input('google_id', sql.BigInt, BigInt(googleId))
+                .input('google_id', sql.VarChar, googleId)
                 .query("SELECT * FROM Usuario WHERE google_id = @google_id");
             const userData = result.recordset[0]
             return userData
@@ -28,7 +28,7 @@ export class UserModel {
                 .input('nickname', sql.NVarChar, nickname)
                 .input('lastname', sql.NVarChar, lastname)
                 .input('email', sql.NVarChar, email)
-                .input('googleId', sql.BigInt, BigInt(googleId))
+                .input('googleId', sql.VarChar, googleId)
                 .input('fotoPerfil', sql.NVarChar, fotoPerfil)
                 .query("INSERT INTO Usuario (nombre, nickname, correo_electronico, google_id, foto_perfil, fecha_registro, apellido) VALUES (@name, @nickname, @email, @googleId, @fotoPerfil, GETDATE(), @lastname); SELECT SCOPE_IDENTITY() AS id;");
             
@@ -55,7 +55,7 @@ export class UserModel {
         try {
             const pool = await getConnection();
             const result = await pool.request()
-                .input('id', sql.BigInt, BigInt(googleId))
+                .input('id', sql.VarChar, googleId)
                 .input('name', sql.NVarChar, name)
                 .input('nickname', sql.NVarChar, nickname)
                 .input('lastname', sql.NVarChar, lastname)
@@ -74,11 +74,11 @@ export class UserModel {
     }
 
 
-    static async deleteUser(google_id){
+    static async deleteUser(googleId){
         try {
             const pool = await getConnection();
             const result = await pool.request()
-                .input('google_id', sql.BigInt, BigInt(google_id))
+                .input('google_id', sql.VarChar, googleId)
                 .query("DELETE FROM Usuario WHERE google_id = @google_id");
             if (result.recordset[0] === 0) {
                 return { message: 'Usuario no encontrado.' }
