@@ -4,8 +4,35 @@ import { createToken } from '../middleware/jwtMiddleware.js';
 import { UserModel } from '../models/user.js';
 dotenv.config();
 
+const key = process.env.SECRET_KEY
+
+const loginToken = async (token) => {
+    const tokenInfo = jwt.verify(token, key)
+    try {
+        const user = await UserModel.getUser(tokenInfo.id)
+        const accessToken = createToken(user);
+        const decodeToken = jwt.decode(accessToken)
+            res.header('authorization', accessToken).json({
+                message: "Usuario correcto",
+                token: accessToken,
+                expiresIn: decodeToken.exp,
+                user: {
+                    id: user.google_id,
+                    name: user.nombre,
+                    lastname: user.apellido,
+                    nickname: user.nickname,
+                    email: user.correo_electronico,
+                    photo: user.foto_perfil
+                }
+            });
+    } catch (error) {}
+}
+
 export const postLogin = async (req, res) => {  // CREO TOKEN
-    const { googleId } = req.body;
+    const { googleId, token } = req.body;
+    if(token){
+        await loginToken(token)
+    } 
     try {
         const user = await UserModel.getUser(googleId)
         if(user){
