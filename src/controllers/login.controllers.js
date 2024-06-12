@@ -10,8 +10,17 @@ const loginToken = async (token) => {
     const tokenInfo = jwt.verify(token, key)
     try {
         const user = await UserModel.getUser(tokenInfo.id)
+        return user.google_id
+    } catch (error) {}
+}
+
+export const postLoginToken = async (req, res) => {
+    
+    try {
+        const googleId = await loginToken(req.body.token)
+        const user = await UserModel.getUser(googleId)
         const accessToken = createToken(user);
-        const decodeToken = jwt.decode(accessToken)
+            const decodeToken = jwt.decode(accessToken)
             res.header('authorization', accessToken).json({
                 message: "Usuario correcto",
                 token: accessToken,
@@ -25,14 +34,14 @@ const loginToken = async (token) => {
                     photo: user.foto_perfil
                 }
             });
-    } catch (error) {}
+    } catch (error) {
+        
+    }
 }
 
 export const postLogin = async (req, res) => {  // CREO TOKEN
-    const { googleId, token } = req.body;
-    if(token){
-        await loginToken(token)
-    } 
+    const { googleId } = req.body;
+
     try {
         const user = await UserModel.getUser(googleId)
         if(user){
