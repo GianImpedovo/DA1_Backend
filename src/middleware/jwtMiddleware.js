@@ -5,7 +5,7 @@ dotenv.config();
 const key = process.env.SECRET_KEY
 
 export function createToken(user){
-    const expiresIn = 600
+    const expiresIn = 3600
     const expirationDate = Math.floor(Date.now() / 1000) + expiresIn;
     return jwt.sign({ 
         id:  user.google_id,

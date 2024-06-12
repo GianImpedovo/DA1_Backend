@@ -211,9 +211,7 @@ export const getMovies = async (req, res) => {
     if(orderBy){
         respuesta = ordenarRespuestaPeliculas(orderBy, respuesta)
     }
-
     res.send(respuesta)
-
 }
 
 async function sumaVotosPelicula(id) {
