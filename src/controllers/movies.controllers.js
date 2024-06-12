@@ -100,8 +100,25 @@ async function obtenerActoresPorBuscador(busqueda){
 
 async function obtenerPeliculasActor(actorId){
     const url = `https://api.themoviedb.org/3/person/${actorId}/movie_credits`
-    const respuesta = await obtenerPeliculas(url)
-    return respuesta;
+    let resPeliculas = Array();
+    try {
+        const response = await axios.get(url, { headers });
+        const peliculas = response.data.cast
+        if(peliculas){
+            peliculas.sort((a, b) => b.popularity - a.popularity);
+            for (let i = 0; i < peliculas.length; i++) {
+                resPeliculas.push({
+                    "id": peliculas[i].id,
+                    "title": peliculas[i].title,
+                    "popularity": peliculas[i].popularity,
+                    "release_date": peliculas[i].release_date,
+                    "vote_average": peliculas[i].vote_average,
+                    "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
+            }
+        }
+        return resPeliculas
+    } catch (error) {}
+    return resPeliculas;
 }
 
 async function ordenarListados(peliculas, actores){ 
@@ -118,7 +135,6 @@ async function ordenarListados(peliculas, actores){
             }
             return peliculas
         } else {
-            console.log(" el actor tiene mas popularidad")
             let peliculasActor = await obtenerPeliculasActor(actores[0].id)
             peliculasActor.sort((a, b) => b.popularity - a.popularity)
             for (let i = 0; i < peliculas.length; i++) {
