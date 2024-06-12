@@ -8,7 +8,7 @@ export function createToken(user){
     const expiresIn = 600
     const expirationDate = Math.floor(Date.now() / 1000) + expiresIn;
     return jwt.sign({ 
-        id:  user.GoogleId,
+        id:  user.google_id,
         exp: expirationDate
     }, 
     key

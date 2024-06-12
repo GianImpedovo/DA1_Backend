@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { createToken, validateToken } from '../middleware/jwtMiddleware.js';
+import { createToken } from '../middleware/jwtMiddleware.js';
 import { UserModel } from '../models/user.js';
 dotenv.config();
 

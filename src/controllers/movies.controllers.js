@@ -49,15 +49,17 @@ async function obtenerPeliculas(url){
         let resPeliculas = Array();
         const response = await axios.get(url, { headers });
         const peliculas = response.data.results
-        peliculas.sort((a, b) => b.popularity - a.popularity);
-        for (let i = 0; i < peliculas.length; i++) {
-            resPeliculas.push({
-                "id": peliculas[i].id,
-                "title": peliculas[i].title,
-                "popularity": peliculas[i].popularity,
-                "release_date": peliculas[i].release_date,
-                "vote_average": peliculas[i].vote_average,
-                "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
+        if(peliculas){
+            peliculas.sort((a, b) => b.popularity - a.popularity);
+            for (let i = 0; i < peliculas.length; i++) {
+                resPeliculas.push({
+                    "id": peliculas[i].id,
+                    "title": peliculas[i].title,
+                    "popularity": peliculas[i].popularity,
+                    "release_date": peliculas[i].release_date,
+                    "vote_average": peliculas[i].vote_average,
+                    "image": 'https://image.tmdb.org/t/p/original' + peliculas[i].poster_path})
+            }
         }
         return resPeliculas
 
@@ -107,9 +109,11 @@ async function ordenarListados(peliculas, actores){
         if( peliculas[0].popularity > actores[0].popularity ){
             for (let i = 0; i < actores.length; i++) {
                 let peliculasActor = await obtenerPeliculasActor(actores[i].id)
-                peliculasActor.sort((a, b) => b.popularity - a.popularity)
-                for (let i = 0; i < peliculasActor.length; i++) {
-                    if(!peliculas.includes(peliculasActor[i])) peliculas.push(peliculasActor[i])
+                if(peliculasActor){
+                    peliculasActor.sort((a, b) => b.popularity - a.popularity)
+                    for (let i = 0; i < peliculasActor.length; i++) {
+                        if(!peliculas.includes(peliculasActor[i])) peliculas.push(peliculasActor[i])
+                    }
                 }
             }
             return peliculas
