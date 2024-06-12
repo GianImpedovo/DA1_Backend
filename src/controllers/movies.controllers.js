@@ -169,9 +169,8 @@ async function busquedaMasPopular(language, page){
 function ordenarRespuestaPeliculas(orderBy, respuesta){
     let orderValues = orderBy.split(',').map(pair => { let[key,value] = pair.split(':');
         return {key, value};
-     });
-    
-     respuesta.sort((a, b) => {
+    });
+    respuesta.sort((a, b) => {
         for (let order of orderValues) {
             if (order.key === 'release_date') {
                 let dateA = new Date(a.release_date);
@@ -179,7 +178,7 @@ function ordenarRespuestaPeliculas(orderBy, respuesta){
                 if (order.value === 'asc') {
                     if (dateA < dateB) return -1;
                     if (dateA > dateB) return 1;
-                } else {
+                } else if (order.value === 'desc'){
                     if (dateA > dateB) return -1;
                     if (dateA < dateB) return 1;
                 }
@@ -187,7 +186,7 @@ function ordenarRespuestaPeliculas(orderBy, respuesta){
                 if (order.value === 'asc') {
                     if (a.vote_average < b.vote_average) return -1;
                     if (a.vote_average > b.vote_average) return 1;
-                } else {
+                } else if (order.value === 'desc'){
                     if (a.vote_average > b.vote_average) return -1;
                     if (a.vote_average < b.vote_average) return 1;
                 }
@@ -209,7 +208,6 @@ export const getMovies = async (req, res) => {
     } else {
         respuesta = await busquedaMasPopular(language, page)
     }
-
     if(orderBy){
         respuesta = ordenarRespuestaPeliculas(orderBy, respuesta)
     }
