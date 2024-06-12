@@ -76,7 +76,6 @@ async function obtenerPeliculasPorBuscador(busqueda, language, page){
 
 async function obtenerActoresPorBuscador(busqueda){
     const url = `https://api.themoviedb.org/3/search/person?query=${busqueda}`
-
     try {
         let resActores = Array();
         const response = await axios.get(url, { headers });
@@ -84,14 +83,12 @@ async function obtenerActoresPorBuscador(busqueda){
         actores = actores.filter(actor => actor.known_for_department == "Acting")
         actores.sort((a, b) => b.popularity - a.popularity);
         for (let i = 0; i < actores.length; i++) {
-            if( actores[i].name.includes(busqueda) ){
-                resActores.push({
-                    "id": actores[i].id,
-                    "name": actores[i].name,
-                    "popularity": actores[i].popularity,
-                    "img": 'https://image.tmdb.org/t/p/original' + actores[i].profile_path
-                })
-            }
+            resActores.push({
+                "id": actores[i].id,
+                "name": actores[i].name,
+                "popularity": actores[i].popularity,
+                "img": 'https://image.tmdb.org/t/p/original' + actores[i].profile_path
+            })
         }
         return resActores
 
