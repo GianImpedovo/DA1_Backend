@@ -35,7 +35,7 @@ Linux:
 
 Comdando: git clone https://github.com/GianImpedovo/DA1_Backend.git
 
-### Instalar Dependencias
+## Instalar Dependencias
 
 Desde la raiz del proyecto ejecutar el siguiente comando para instalar dependencias:
 npm install
