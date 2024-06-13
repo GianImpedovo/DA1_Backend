@@ -23,13 +23,15 @@ interaccion con los datos de la base y conexion con TMDB para la obtencion de in
 
 Descomprimir el archivo ZIP:
 
-Windows:
+**Windows**:
 - Navega al archivo ZIP descargado y haz clic derecho sobre él.
 - Selecciona "Extraer todo..." y elige la ubicación donde deseas descomprimir los archivos.
 
-Linux:
-- unzip nombre-del-archivo.zip -d nombre-del-directorio
-- cd nombre-del-directorio
+**Linux**:
+```
+unzip nombre-del-archivo.zip -d nombre-del-directorio
+cd nombre-del-directorio
+```
 
 ## Opcion 2: Clonar el repositorio
 
@@ -38,7 +40,7 @@ Comdando: git clone https://github.com/GianImpedovo/DA1_Backend.git
 ## Instalar Dependencias
 
 Desde la raiz del proyecto ejecutar el siguiente comando para instalar dependencias:
-npm install
+```npm install```
 
 ## Variables de entorno, archivo .env:
 Debe existir un .env en la raiz del proyecto, en caso que no exista crear y copiar los siguientes datos:
@@ -56,20 +58,20 @@ PORT=3000
 
 Usar el comando para inicializar la API, debe figurar el mensaje: server listening on port http://localhost:<PUERTO> : 
 
-Inicio desarrollo:
-npm run dev
+**Inicio desarrollo**:
+```npm run dev```
 
-Inicio produccion:
-node .\src\index.js
+**Inicio produccion**:
+```node .\src\index.js```
 
 ### Dependencias
-axios - ^1.6.8
-compromise - 14.13.0
-cors - ^2.8.5
-dotenv - ^16.4.5
-express - ^4.19.2
-jsonwebtoken - ^9.0.2
-morgan - ^1.10.0
-mssql - ^10.0.2
-node-fetch - ^2.7.0
-nodemon - ^3.1.0
+- axios - ^1.6.8
+- compromise - 14.13.0
+- cors - ^2.8.5
+- dotenv - ^16.4.5
+- express - ^4.19.2
+- jsonwebtoken - ^9.0.2
+- morgan - ^1.10.0
+- mssql - ^10.0.2
+- node-fetch - ^2.7.0
+- nodemon - ^3.1.0
