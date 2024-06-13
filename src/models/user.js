@@ -51,16 +51,17 @@ export class UserModel {
 
     static async putUser( id, body ) {
         const googleId = id
-        const { name, nickname, email, lastname } = body
+        const { name, nickname, email, lastname, photo } = body
         try {
             const pool = await getConnection();
             const result = await pool.request()
                 .input('id', sql.VarChar, googleId)
                 .input('name', sql.NVarChar, name)
-                .input('nickname', sql.NVarChar, nickname)
                 .input('lastname', sql.NVarChar, lastname)
+                .input('nickname', sql.NVarChar, nickname)
                 .input('email', sql.NVarChar, email)
-                .query("UPDATE Usuario SET nombre = @name, nickname = @nickname, correo_electronico = @email, apellido = @lastname WHERE google_id = @id");
+                .input('photo', sql.NVarChar, photo)
+                .query("UPDATE Usuario SET nombre = @name, apellido = @lastname, nickname = @nickname, correo_electronico = @email, foto_perfil = @photo WHERE google_id = @id");
             if (result.rowsAffected[0] === 0) {
                 return ({ message: 'Usuario no encontrado.' });
             }

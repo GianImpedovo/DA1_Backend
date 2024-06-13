@@ -36,7 +36,7 @@ export const postUser = async (req, res) => {
 
 export const putUser = async (req, res) => {
     try {
-        const result = await UserModel.putUser(req.params.id, body)
+        const result = await UserModel.putUser(req.params.id, req.body)
         res.send(result);
     } catch (error) {
         console.error(error);
