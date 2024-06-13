@@ -35,7 +35,7 @@ cd nombre-del-directorio
 
 ## Opcion 2: Clonar el repositorio
 
-Comdando: git clone https://github.com/GianImpedovo/DA1_Backend.git
+Comdando: ``` git clone https://github.com/GianImpedovo/DA1_Backend.git ```
 
 ## Instalar Dependencias
 
