@@ -1,25 +1,25 @@
 # API MoviePlay
 
-# Integrantes
+## Integrantes
 
 - Jeronimo Aquino
 - Lucia Castro
 - Agostina Timberio
 - Gianfranco Impedovo
 
-# Descripcion 
+### Descripcion 
 
 Api para realizar conexion con base de datos instanciada en aws, realiza la verificacion y creacion de token para validacion de usuario,
 interaccion con los datos de la base y conexion con TMDB para la obtencion de informacion sobre las peliculas solicitadas
 
-## Requisitos
+### Requisitos
 
 - Node.js v20.12.1
 - npm v10.5.0
 
-# Instalacion 
+### Instalacion 
 
-# Opcion 1: Archivo ZIP 
+## Opcion 1: Archivo ZIP 
 
 Descomprimir el archivo ZIP:
 
@@ -31,28 +31,28 @@ Linux:
 - unzip nombre-del-archivo.zip -d nombre-del-directorio
 - cd nombre-del-directorio
 
-# Opcion 2: Clonar el repositorio
+## Opcion 2: Clonar el repositorio
 
 Comdando: git clone https://github.com/GianImpedovo/DA1_Backend.git
 
-# Instalar Dependencias
+### Instalar Dependencias
 
 Desde la raiz del proyecto ejecutar el siguiente comando para instalar dependencias:
 npm install
 
-# Variables de entorno, archivo .env:
+## Variables de entorno, archivo .env:
 Debe existir un .env en la raiz del proyecto, en caso que no exista crear y copiar los siguientes datos:
 
-## Token para usar la api de TMDB
+### Token para usar la api de TMDB
 ACCESS_TOKEN="eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIyZTUzMTAwNDIxM2MyNGQxZjZlMmE1YjUxNjMwYzg0ZCIsInN1YiI6IjY2MWQ2NjYwZWMwYzU4MDE3Yzc0ZGY5ZiIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.gtIXH-XpTI3d62vL5GM8Zpbunu8TfVvdK2tU6coNvS0"
 
-## Secret key para creacion del JWT
+### Secret key para creacion del JWT
 SECRET_KEY = "crlf"
 
-## Puerto de la API
+### Puerto de la API
 PORT=3000
 
-# Inicio:
+## Inicio:
 
 Usar el comando para inicializar la API, debe figurar el mensaje: server listening on port http://localhost:<PUERTO> : 
 
@@ -62,7 +62,7 @@ npm run dev
 Inicio produccion:
 node .\src\index.js
 
-# Dependencias
+### Dependencias
 axios - ^1.6.8
 compromise - 14.13.0
 cors - ^2.8.5
