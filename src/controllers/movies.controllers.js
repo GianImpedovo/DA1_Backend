@@ -261,6 +261,18 @@ async function obtenerImagenesPelicula(id){
 
 }
 
+async function obtenerVideoPelicula(id){
+    const url = `https://api.themoviedb.org/3/movie/${id}/videos`
+    try {
+        const response = await axios.get(url, { headers });
+        const video = response.data.results.filter(videoInfo => videoInfo.type === 'Trailer' && videoInfo.site === 'YouTube')[0]
+        const urlVideo = 'https://www.youtube.com/watch?v=' + video.key
+        return urlVideo
+    } catch (error) {
+        
+    }
+}
+
 export const getMovie = async (req, res) => {
     const { id } = req.params;
     const { language } = req.query;
@@ -294,12 +306,14 @@ export const getMovie = async (req, res) => {
             img: 'https://image.tmdb.org/t/p/original' + actor.profile_path})).slice(0,5)
 
         const imgPaths = await obtenerImagenesPelicula(id)
+        const video = await obtenerVideoPelicula(id)
         // console.log(imgPaths);
         const movie = {
             "id": movieData.id,
             "title": movieData.title,
             "synopsis": movieData.overview,
             "imgPaths": imgPaths,
+            "video": video,
             "genres": movieData.genres.map(genre => genre.name),
             "releaseDate": movieData.release_date,
             "duration": movieData.runtime,
