@@ -265,8 +265,8 @@ export const getMovie = async (req, res) => {
         const promedioVotos = (sumaVotos / cantidadVotos).toFixed(1);
 
         const ratingFavorito = await obtenerRatingFavorito(id, userId);
-        const userRating = ratingFavorito.rating;
-        const favorito = ratingFavorito.favorite;
+        const userRating = ratingFavorito ? ratingFavorito.rating : "" ;
+        const favorito = ratingFavorito ? ratingFavorito.favorite : false ;
 
         const directorInfo = credtisData.crew.find(director => director.job === "Director");
         const director = {

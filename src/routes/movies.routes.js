@@ -9,7 +9,7 @@ movieRouter.get('/movies/signIn', getSignInMovies)
 
 movieRouter.get("/movies", getMovies)
 
-movieRouter.get("/movies/:id", getMovie)
+movieRouter.get("/movies/:id/:userId", getMovie)
 
 movieRouter.post("/movies/:movieId/:userId", clasifiedMovie)
 
