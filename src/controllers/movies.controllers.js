@@ -245,10 +245,26 @@ async function obtenerRatingFavorito(movieId, userId) {
     }
 }
 
+async function obtenerImagenesPelicula(id){
+    const url = `https://api.themoviedb.org/3/movie/${id}/images`
+    try {
+        const response = await axios.get(url, { headers });
+        const imagenes = response.data.backdrops.slice(0,5)
+        let listImg = Array()
+        for (let i = 0; i < imagenes.length; i++) {
+            listImg.push('https://image.tmdb.org/t/p/original' + imagenes[i].file_path)
+        }
+        return listImg
+    } catch (error) {
+        
+    }
+
+}
+
 export const getMovie = async (req, res) => {
     const { id } = req.params;
     const { language } = req.query;
-    const { userId } = req.body;
+    const { userId } = req.params;
 
     const urlMovie = `https://api.themoviedb.org/3/movie/${id}?language=${language}`;
     const urlCredits = `https://api.themoviedb.org/3/movie/${id}/credits?language=${language}`;
@@ -277,10 +293,13 @@ export const getMovie = async (req, res) => {
             name: actor.name,
             img: 'https://image.tmdb.org/t/p/original' + actor.profile_path})).slice(0,5)
 
+        const imgPaths = await obtenerImagenesPelicula(id)
+        // console.log(imgPaths);
         const movie = {
             "id": movieData.id,
             "title": movieData.title,
             "synopsis": movieData.overview,
+            "imgPaths": imgPaths,
             "genres": movieData.genres.map(genre => genre.name),
             "releaseDate": movieData.release_date,
             "duration": movieData.runtime,
