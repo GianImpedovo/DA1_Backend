@@ -81,12 +81,12 @@ export const putFavorite = async (req, res) => {
 
         if(estaRegistro){
             result = await pool.request()
-            .input('id', sql.BigInt, id)
+            .input('id', sql.VarChar, id)
             .input('pelicula_id', sql.Int, movieId)
             .query("UPDATE Interaccion_pelicula SET favorito = 1 WHERE usuario_id = @id AND pelicula_id = @pelicula_id");
         } else {
             result = await pool.request()
-            .input('id', sql.BigInt, id)
+            .input('id', sql.VarChar, id)
             .input('pelicula_id', sql.Int, movieId)
             .input('rating', sql.Int, 0)
             .input('favorito', sql.Int, 1)
