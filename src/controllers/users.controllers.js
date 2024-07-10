@@ -109,7 +109,7 @@ export const deleteFavorite = async (req, res) => {
     try {
         const pool = await getConnection();
         const result = await pool.request()
-        .input('id', sql.BigInt, id)
+        .input('id', sql.VarChar, id)
         .input('pelicula_id', sql.Int, movieId)
         .query("UPDATE Interaccion_pelicula SET favorito = 0 WHERE usuario_id = @id AND pelicula_id = @pelicula_id");
         if (result.rowsAffected[0] === 0) {

@@ -7,7 +7,7 @@ export class InteractionMovieModel {
         try {
             const pool = await getConnection();
             const result = await pool.request()
-                .input('usuario_id', sql.Int, userId)
+                .input('usuario_id', sql.VarChar, userId)
                 .query('SELECT pelicula_id as movieId, rating FROM Interaccion_pelicula WHERE usuario_id = @usuario_id AND favorito = 1');
             if (result.rowsAffected[0] === 0) {
                 return { message: 'Registro no encontrado' };
@@ -24,7 +24,7 @@ export class InteractionMovieModel {
         try {
             const pool = await getConnection();
             const rating = await pool.request()
-                .input('usuario_id', sql.Int, userId)
+                .input('usuario_id', sql.VarChar, userId)
                 .input('pelicula_id', sql.Int, movieId)
                 .query('SELECT rating FROM Interaccion_pelicula WHERE usuario_id = @usuario_id AND pelicula_id = @pelicula_id;')
             return rating.recordset[0].rating
@@ -37,7 +37,7 @@ export class InteractionMovieModel {
         try {
             const pool = await getConnection();
             const registro = await pool.request()
-                .input('usuario_id', sql.Int, userId)
+                .input('usuario_id', sql.VarChar, userId)
                 .input('pelicula_id', sql.Int, movieId)
                 .query('SELECT COUNT(*) AS count FROM interaccion_pelicula WHERE usuario_id = @usuario_id AND pelicula_id = @pelicula_id')
             return registro.recordset[0].count === 1
@@ -50,7 +50,7 @@ export class InteractionMovieModel {
         try {
             const pool = await getConnection();
             await pool.request()
-                .input('usuario_id', sql.Int, userId)
+                .input('usuario_id', sql.VarChar, userId)
                 .input('pelicula_id', sql.Int, movieId)
                 .input('rating', sql.Int, rating)
                 .query("UPDATE Interaccion_pelicula SET rating = @rating WHERE usuario_id = @usuario_id AND pelicula_id = @pelicula_id; ");
@@ -64,7 +64,7 @@ export class InteractionMovieModel {
         try {
             const pool = await getConnection();
             await pool.request()
-                .input('usuario_id', sql.Int, userId)
+                .input('usuario_id', sql.VarChar, userId)
                 .input('pelicula_id', sql.Int, movieId)
                 .input('rating', sql.Int, rating)
                 .input('favorito', sql.Int, favorite)
@@ -80,7 +80,7 @@ export class InteractionMovieModel {
             const pool = await getConnection();
             const result = await pool.request()
                 .input('pelicula_id', sql.Int, movieId)
-                .input('usuario_id', sql.BigInt, userId)
+                .input('usuario_id', sql.VarChar, userId)
                 .query('SELECT usuario_id, rating, favorito FROM Interaccion_pelicula where pelicula_id = @pelicula_id and usuario_id = @usuario_id;')
             const ratingFavorito = {
                 userId: userId,
