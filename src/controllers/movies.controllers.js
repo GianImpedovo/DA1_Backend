@@ -266,8 +266,8 @@ async function obtenerVideoPelicula(id){
     try {
         const response = await axios.get(url, { headers });
         const video = response.data.results.filter(videoInfo => videoInfo.type === 'Trailer' && videoInfo.site === 'YouTube')[0]
-        const urlVideo = 'https://www.youtube.com/watch?v=' + video.key
-        return urlVideo
+        const videoKey = video.key
+        return videoKey
     } catch (error) {
         
     }
