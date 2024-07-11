@@ -8,12 +8,11 @@ export class InteractionMovieModel {
             const pool = await getConnection();
             const result = await pool.request()
                 .input('usuario_id', sql.VarChar, userId)
-                .query('SELECT pelicula_id as movieId, rating FROM Interaccion_pelicula WHERE usuario_id = @usuario_id AND favorito = 1');
+                .query('SELECT pelicula_id as movieId FROM Interaccion_pelicula WHERE usuario_id = @usuario_id AND favorito = 1');
             if (result.rowsAffected[0] === 0) {
                 return { message: 'Registro no encontrado' };
             }
             const favoritos = result.recordset
-            console.log(favoritos);
             return favoritos
         } catch (error) {
             

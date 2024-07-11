@@ -3,6 +3,7 @@ import sql from 'mssql';
 import { UserModel } from "../models/user.js";
 import { MovieModel } from "../models/movie.js";
 import { InteractionMovieModel } from "../models/interactionMovie.js";
+import { obtenerPeliculasPorId } from "../controllers/movies.controllers.js"
 
 export const getUser = async (req, res) => {
     const GoogleId = req.params.id
@@ -59,7 +60,8 @@ export const getFavorites = async (req, res) => {
     const { id } = req.params
     try {
         const result = await InteractionMovieModel.getFavorite(id)
-        res.send(result);  // Ojo este no es el resultado final, tengo que usar los datos de TMDB []
+        const peliculas = await obtenerPeliculasPorId(result)
+        res.send(peliculas); 
 
     } catch (error) {
         console.error(error);

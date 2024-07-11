@@ -44,6 +44,25 @@ function busquedaHeuristica(busqueda){
     return false;
 }
 
+export const obtenerPeliculasPorId =  async (listaPeliculas) => {
+
+    let peliculas = Array();
+    let urlMovie = "";
+    let responseMovie = "";
+    let movieData = "";
+    for (let i = 0; i < listaPeliculas.length; i++) {
+        urlMovie = `https://api.themoviedb.org/3/movie/${listaPeliculas[i].movieId}`;
+        responseMovie = await axios.get(urlMovie, { headers });
+        movieData = responseMovie.data
+        peliculas.push({
+            "id": movieData.id,
+            "title": movieData.title,
+            "img": 'https://image.tmdb.org/t/p/original' + movieData.poster_path
+        })
+    }
+    return peliculas
+}
+
 async function obtenerPeliculas(url){
     try {
         let resPeliculas = Array();
