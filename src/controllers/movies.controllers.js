@@ -388,7 +388,7 @@ export const clasifiedMovie = async (req, res) => {
     }
 
     try {
-        let result;
+
         const estaPelicula = await MovieModel.existMovie(movieId)
         if(!estaPelicula){
             await MovieModel.postMovie(movieId, 1, rating)
@@ -402,9 +402,9 @@ export const clasifiedMovie = async (req, res) => {
             await MovieModel.updateCantidadVotos(rating, movieId)
         }
 
-        if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({ message: 'Dato no encontrado' });
-        }
+        // if (result.rowsAffected[0] === 0) {
+        //     return res.status(404).json({ message: 'Dato no encontrado' });
+        // }
         res.send(`se clasifico la pelicula ${rating}`);
 
     } catch (error) {
