@@ -377,7 +377,6 @@ const actualizarRegistroPelicula = async (rating, userId, movieId) => {
         console.error(error);
         res.status(500).json({ message: 'Error al buscar registro' });
     }
-    
 }
 
 export const clasifiedMovie = async (req, res) => {
@@ -392,6 +391,8 @@ export const clasifiedMovie = async (req, res) => {
         const estaPelicula = await MovieModel.existMovie(movieId)
         if(!estaPelicula){
             await MovieModel.postMovie(movieId, 1, rating)
+        } else {
+            await MovieModel.updateCantidadVotos(rating, movieId)
         }
         const estaRegistro = await InteractionMovieModel.exist(userId, movieId)
         if(estaRegistro){ // si esta el registro solo actualizo el campo del rating que pone el usuario
@@ -399,7 +400,6 @@ export const clasifiedMovie = async (req, res) => {
             await InteractionMovieModel.updateRating(rating, userId, movieId)
         } else { // Si no esta el registro creo uno nuevo con toda la info 
             await InteractionMovieModel.insertInteraction(userId, movieId, rating, 0)
-            await MovieModel.updateCantidadVotos(rating, movieId)
         }
 
         // if (result.rowsAffected[0] === 0) {

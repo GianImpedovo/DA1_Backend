@@ -81,6 +81,10 @@ export class MovieModel {
     static async updateCantidadVotos(rating, movieId){
         try {
             const pool = await getConnection();
+            const result = await pool.request()
+            .input('pelicula_id', sql.Int, movieId)
+            .query('SELECT * FROM Pelicula where id = @pelicula_id;')
+            console.log(result);
             await pool.request()
             .input('pelicula_id', sql.Int, movieId)
             .input('rating', sql.Int, rating)
