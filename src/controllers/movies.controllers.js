@@ -309,7 +309,7 @@ export const getMovie = async (req, res) => {
         // Datos de la db:
         const cantidadVotos = await obtenerCantidadVotos(id);
         const sumaVotos = await sumaVotosPelicula(id);
-        const promedioVotos = (sumaVotos / cantidadVotos).toFixed(1);
+        const promedioVotos = (sumaVotos / cantidadVotos);
 
         const ratingFavorito = await obtenerRatingFavorito(id, userId);
         const userRating = ratingFavorito ? ratingFavorito.rating : "" ;
