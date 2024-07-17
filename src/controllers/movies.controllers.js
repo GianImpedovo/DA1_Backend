@@ -395,8 +395,8 @@ export const clasifiedMovie = async (req, res) => {
 
         const estaRegistro = await InteractionMovieModel.exist(userId, movieId)
         if(estaRegistro){ // si esta el registro solo actualizo el campo del rating que pone el usuario
-            await InteractionMovieModel.updateRating(rating, userId, movieId)
             await actualizarRegistroPelicula(rating, userId, movieId)
+            await InteractionMovieModel.updateRating(rating, userId, movieId)
         } else { // Si no esta el registro creo uno nuevo con toda la info 
             await InteractionMovieModel.insertInteraction(userId, movieId, rating, 0)
             await MovieModel.updateCantidadVotos(rating, movieId)
