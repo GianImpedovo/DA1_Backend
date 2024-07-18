@@ -93,5 +93,28 @@ export class InteractionMovieModel {
         }
     }
 
+    static async getRegistros(userId){
+        try {
+            const pool = await getConnection();
+            const result = await pool.request()
+                .input('usuario_id', sql.VarChar, userId)
+                .query('SELECT * FROM Interaccion_pelicula where usuario_id = @usuario_id;')
+            return result.recordset
+        } catch (error) {
+            
+        }
+    }
+
+    static async deleteUserInteractions(google_id){
+        try {
+            const pool = await getConnection();
+            await pool.request()
+                .input('google_id', sql.VarChar, google_id)
+                .query('DELETE FROM Interaccion_pelicula WHERE usuario_id = @google_id;')
+        } catch (error) {
+            
+        }
+    }
+
 
 }

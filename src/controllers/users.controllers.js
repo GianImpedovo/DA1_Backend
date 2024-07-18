@@ -48,7 +48,24 @@ export const putUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
     const {id} = req.params
     try {
-        const result = await UserModel.deleteUser(id)     
+        let pelicula_id;
+        let rating;
+        // 1 tengo que actualizar todas las peliculas:
+        const interaccion = await InteractionMovieModel.getRegistros(id)
+        for (let i = 0; i < interaccion.length; i++) {
+            pelicula_id = interaccion[i].pelicula_id
+            rating = interaccion[i].rating
+            await MovieModel.restarRating(rating, pelicula_id)
+            if(rating !== 0){ // Solo resto cantidad de votos si el usuario puso votos
+                await MovieModel.restarCantidadVotos(pelicula_id)
+            }
+        }
+        
+        // 2 Tengo que borrar todas la interacciones entre la pelicula y el usuario
+        await InteractionMovieModel.deleteUserInteractions(id)
+
+        // 3 Borro el usuario
+        const result = await UserModel.deleteUser(id)
         res.send(result);
     } catch (error) {
         console.error(error);

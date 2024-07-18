@@ -93,4 +93,15 @@ export class MovieModel {
             
         }
     }
+
+    static async restarCantidadVotos(movieId){
+        try {
+            const pool = await getConnection();
+            await pool.request()
+            .input('pelicula_id', sql.Int, movieId)
+            .query('UPDATE Pelicula SET cantidad_votos = cantidad_votos - 1 WHERE id = @pelicula_id;')
+        } catch (error) {
+            
+        }
+    }
 }
